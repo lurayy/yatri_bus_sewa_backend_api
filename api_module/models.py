@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db.models.signals import post_save
 import django
 import json 
 
@@ -9,7 +10,7 @@ class Layout(models.Model):
     name = models.CharField(max_length=255)
     width = models.PositiveIntegerField()
     height = models.PositiveIntegerField()
-    layout = models.TextField()
+    grid = models.TextField()
 
     def __str__(self):
         return str(self.name)
@@ -51,7 +52,7 @@ class Route(models.Model):
 
 class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
-    bus_type = models.ForeignKey(VehicleType, on_delete = models.SET_NULL, null = True)
+    vehicle_type = models.ForeignKey(VehicleType, on_delete = models.SET_NULL, null = True)
     number_plate = models.CharField(max_length=255)
 
 
@@ -63,6 +64,20 @@ class ActiveVehicle(models.Model):
     departure_time = models.TimeField()
     departure_point = models.CharField(max_length=255)
     # driver = link driver profile here
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            print("Creating new active vehicle")
+            super(ActiveVehicle, self).save(*args, **kwargs)
+            layout = json.loads(self.vehicle.vehicle_type.layout.grid)
+            for x in range (len(layout)):
+                for y in range (len(layout[x])):
+                    if str(layout[x][y]['state']) == "available":
+                        s = Seat(vehicle = self, seat_number = str(x)+","+str(y))
+                        s.save()
+        else:
+            super(ActiveVehicle, self).save(*args, **kwargs)
+
 
 
 class Booking(models.Model):
@@ -79,6 +94,12 @@ class Booking(models.Model):
 class Seat(models.Model):
     ''' Seat linked to the active vehicle instance and is created dynamically using information for VehicleType'''
     vehicle = models.ForeignKey(ActiveVehicle, on_delete = models.CASCADE)
-    number = models.CharField(max_length=5)
-    is_active = models.BooleanField(default = True)
+    seat_number = models.CharField(max_length=5)
+    STATES = (
+        ('unavailable', 'unavailable'),
+        ('available', 'available'),
+        ('locked', 'locked'),
+        ('booked', 'booked'),
+    )
+    state = models.CharField(max_length=15, choices= STATES, default='available')
     booking_details = models.ForeignKey(Booking, on_delete = models.SET_NULL, null = True, default = None)
