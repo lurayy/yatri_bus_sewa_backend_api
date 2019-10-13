@@ -1,14 +1,24 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 import django
+import json 
+
+
+class Layout(models.Model):
+    ''' Information about Seat layout '''
+    name = models.CharField(max_length=255)
+    width = models.PositiveIntegerField()
+    height = models.PositiveIntegerField()
+    layout = models.TextField()
+
+    def __str__(self):
+        return str(self.name)
 
 class VehicleType(models.Model):
     ''' For Storing data about the vehicle type.'''
     name = models.CharField(max_length = 255)
     seat_count = models.PositiveIntegerField()
-    seat_x = models.PositiveIntegerField()
-    seat_y = models.PositiveIntegerField()
-
+    layout = models.ForeignKey(Layout, on_delete = models.SET_NULL, null = True)
 
 class Route(models.Model):
     ''' Basic information about the route that the vehicle will take.'''
