@@ -1,3 +1,4 @@
+''' Admin module of api '''
 from django.contrib import admin
 from .models import LayoutItem, Layout, SeatItem, Seat, VehicleItem, Vehicle, VehicleType, Booking, Route
 

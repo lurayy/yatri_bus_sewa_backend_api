@@ -1,6 +1,8 @@
+''' Module containing the url patterns of api v1 '''
+
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('add/layout',views.save_layout, name= "Some"),
+    path('layouts/', views.layouts, name='layouts')
 ]
