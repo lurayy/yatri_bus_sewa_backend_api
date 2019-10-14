@@ -39,4 +39,15 @@ def layout_to_json(layout):
     for n in range(len(states)):
         response_json['data'][position_x[n]][position_y[n]]['state'] = states[n]
     return response_json
-    
+
+def json_to_layout(data):
+    ''' takes in the layout grid and creates seats with layout with it '''
+    layout_name = data['name']
+    layout_data = data['data']
+    layout = Layout.objects.get(name=str(layout_name))
+    for x in range(len(layout_data)):
+        for y in range(len(layout_data[x])):
+            if str(layout_data[x][y]['state']) != "none":
+                temp_seat = Seat.objects.get(layout=layout, col=y, row=x)
+                temp_seat.state = layout_data[x][y]['state']
+                temp_seat.save()

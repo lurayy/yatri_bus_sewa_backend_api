@@ -6,7 +6,7 @@ from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_http_methods
 
 from .models import Layout, Seat
-from .utils import model_to_dict, layout_to_json
+from .utils import model_to_dict
 
 
 @require_http_methods(['GET', 'POST'])
