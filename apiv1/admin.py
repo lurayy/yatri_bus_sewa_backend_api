@@ -1,10 +1,8 @@
 ''' Admin module of api '''
 from django.contrib import admin
-from .models import LayoutItem, Layout, SeatItem, Seat, VehicleItem, Vehicle, VehicleType, Booking, Route
+from .models import Layout, SeatItem, Seat, VehicleItem, Vehicle, VehicleType, Booking, Route
 
 admin.site.register(Layout)
-admin.site.register(LayoutItem)
-
 admin.site.register(Seat)
 admin.site.register(VehicleType)
 admin.site.register(Route)

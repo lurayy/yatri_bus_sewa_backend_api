@@ -8,15 +8,10 @@ class Layout(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.name}: {self.seat_set.count()}'
+        return f'Layout: {self.name}: {self.seat_set.count()}'
 
-
-class LayoutItem(models.Model):
-    ''' Safe version of layout model that is used for linking to the bus item'''
-    name = models.CharField(max_length=255)
-
-    def __str__(self):
-        return str(self.name)
+    def delete(self, using=None, keep_parents=False):
+        raise Exception('Cannot delete a read only model object')
 
 
 class Seat(models.Model):
@@ -32,7 +27,10 @@ class Seat(models.Model):
     state = models.CharField(max_length=15, choices=STATES, default='available')
 
     def __str__(self):
-        return self.layout.name + ": " + self.seat_number
+        return f'Seat: {self.layout.name}: {self.seat_number}'
+
+    def delete(self, using=None, keep_parents=False):
+        raise Exception('Cannot delete a read only model object')
 
 
 class VehicleType(models.Model):
@@ -40,14 +38,17 @@ class VehicleType(models.Model):
     name = models.CharField(max_length=255)
     layout = models.ForeignKey(Layout, on_delete=models.SET_NULL, null=True)
 
+    def delete(self, using=None, keep_parents=False):
+        raise Exception('Cannot delete a read only model object')
+
 
 class Route(models.Model):
     ''' Basic information about the route that the vehicle will take.'''
-    origin = models.CharField(max_length=255)
+    source = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
 
-    def delete(self, *args, **kwargs):
-        raise Exception("Cannot Delete Read Only Models.")
+    def delete(self, using=None, keep_parents=False):
+        raise Exception('Cannot delete a read only model object')
 
 
 class Vehicle(models.Model):
@@ -56,66 +57,49 @@ class Vehicle(models.Model):
     number_plate = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.number_plate
+        return f'Vehicle {self.number_plate}'
+
+    def delete(self, using=None, keep_parents=False):
+        raise Exception('Cannot delete a read only model object')
 
 
 class VehicleItem(models.Model):
     ''' Store information about instance of the 'Vehicle' that is active'''
-    vechicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
-
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
     route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True)
-    # duplicate data for integrity
-    layout_item = models.ForeignKey(LayoutItem, on_delete=models.SET_DEFAULT, blank=True, null=True, default=None)
 
     departure_date = models.DateField()
     departure_time = models.TimeField()
     departure_point = models.CharField(max_length=255)
-    # driver = link driver profile here
 
     def save(self, *args, **kwargs):
         if not self.pk:
-            print("Creating new active vehicle")
             super(VehicleItem, self).save(*args, **kwargs)
-
-            # Creating LayoutItem and linking it with VehicleItem
-            read_only_layout = self.vechicle.vehicle_type.layout
-            layout = LayoutItem(name=read_only_layout.name)
-            layout.save()
-            self.layout_item = layout
-            self.save()
-
-            # Creating Seats Using the given layout
-            seats = Seat.objects.filter(layout=read_only_layout)
+            seats = self.vehicle.vehicle_type.layout.seat_set.all()
             for seat in seats:
-                seat_item = SeatItem.objects.create(layout_item=self.layout_item,
-                                                    vehicle_item=self, seat_number=seat.seat_number, state=seat.state)
-                seat_item.save()
-
+                SeatItem.objects.create(vehicle_item=self, seat_number=seat.seat_number, state=seat.state)
         else:
             super(VehicleItem, self).save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.vechicle) + " " + str(self.departure_date)
+        return f'VehicleItem: {self.vehicle}: {self.departure_date}'
 
 
 class Booking(models.Model):
     ''' Stores booking details'''
-    booked_by = models.CharField(
-        max_length=255)                                          # will be a linked to user profile in future
+    booked_by = models.CharField(max_length=255)            # will be a linked to user profile in future
     booked_for = models.CharField(max_length=255)
     total_amount_paid = models.PositiveIntegerField()
-    is_paid = models.BooleanField()
-    # will be a selection after we decide what to implement
+    is_paid = models.BooleanField()                         # will be a selection after we decide what to implement
     payment_method = models.CharField(max_length=255)
     date = models.DateTimeField(default=django.utils.timezone.now)
-    vehicle_item = models.ForeignKey(VehicleItem, on_delete=models.SET_NULL,
-                                     null=True)   # for ease of info extraction i.e bus number
+    # for ease of info extraction i.e bus number
+    vehicle_item = models.ForeignKey(VehicleItem, on_delete=models.SET_NULL, null=True)
 
 
 class SeatItem(models.Model):
     ''' Seat  Instance linked to the active vehicle instance and layout instance '''
-    layout_item = models.ForeignKey(LayoutItem, on_delete=models.CASCADE)
-    vehicle_item = models.ForeignKey(VehicleItem, on_delete=models.CASCADE)
+    vehicle_item = models.ForeignKey(VehicleItem, on_delete=models.CASCADE, related_name='seat_item_set')
     seat_number = models.CharField(max_length=5)
     STATES = (
         ('unavailable', 'unavailable'),
@@ -127,4 +111,4 @@ class SeatItem(models.Model):
     booking_details = models.ForeignKey(Booking, on_delete=models.SET_NULL, null=True, default=None)
 
     def __str__(self):
-        return str(self.vehicle_item) + ": " + self.seat_number
+        return f'SeatItem: {self.vehicle_item}: {self.seat_number}'
