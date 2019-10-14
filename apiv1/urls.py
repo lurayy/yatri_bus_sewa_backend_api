@@ -4,5 +4,5 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('layouts', views.layouts, name='layouts')
+    path('layouts/', views.layouts, name='layouts'),
 ]
