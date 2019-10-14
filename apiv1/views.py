@@ -24,8 +24,10 @@ def layouts(request):
             for x in range(len(layout_data)):
                 for y in range(len(layout_data[x])):
                     if str(layout_data[x][y]['state']) == "available":
-                        s = Seat.objects.create(layout = layout, seat_number = str(x)+","+str(y), state = str(layout_data[x][y]['state']))
-                        s.save()
+                        temp_seat = Seat.objects.create(layout=layout, 
+                                                        state=str(layout_data[x][y]['state']), 
+                                                        col=y, row=x)
+                        temp_seat.save()
             return HttpResponse(status=201)
         except:
             return HttpResponseBadRequest

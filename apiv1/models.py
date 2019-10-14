@@ -17,7 +17,10 @@ class Layout(models.Model):
 class Seat(models.Model):
     '''Seat related with layout'''
     layout = models.ForeignKey(Layout, on_delete=models.CASCADE)
-    seat_number = models.CharField(max_length=5)
+    label = models.CharField(max_length=5, default=None, blank=True, null=True)
+    col = models.PositiveIntegerField()
+    row = models.PositiveIntegerField()
+
     STATES = (
         ('unavailable', 'unavailable'),
         ('available', 'available'),
@@ -27,7 +30,7 @@ class Seat(models.Model):
     state = models.CharField(max_length=15, choices=STATES, default='available')
 
     def __str__(self):
-        return f'Seat: {self.layout.name}: {self.seat_number}'
+        return f'Seat: {self.layout.name}: {self.label}'
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
@@ -77,7 +80,7 @@ class VehicleItem(models.Model):
             super(VehicleItem, self).save(*args, **kwargs)
             seats = self.vehicle.vehicle_type.layout.seat_set.all()
             for seat in seats:
-                SeatItem.objects.create(vehicle_item=self, seat_number=seat.seat_number, state=seat.state)
+                SeatItem.objects.create(vehicle_item=self, label=seat.label, state=seat.state)
         else:
             super(VehicleItem, self).save(*args, **kwargs)
 
@@ -100,7 +103,7 @@ class Booking(models.Model):
 class SeatItem(models.Model):
     ''' Seat  Instance linked to the active vehicle instance and layout instance '''
     vehicle_item = models.ForeignKey(VehicleItem, on_delete=models.CASCADE, related_name='seat_item_set')
-    seat_number = models.CharField(max_length=5)
+    label = models.CharField(max_length=5, null= True)
     STATES = (
         ('unavailable', 'unavailable'),
         ('available', 'available'),
@@ -111,4 +114,4 @@ class SeatItem(models.Model):
     booking_details = models.ForeignKey(Booking, on_delete=models.SET_NULL, null=True, default=None)
 
     def __str__(self):
-        return f'SeatItem: {self.vehicle_item}: {self.seat_number}'
+        return f'SeatItem: {self.vehicle_item}: {self.label}'
