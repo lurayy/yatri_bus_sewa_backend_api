@@ -102,8 +102,8 @@ class Booking(models.Model):
 
 class SeatItem(models.Model):
     ''' Seat  Instance linked to the active vehicle instance and layout instance '''
-    vehicle_item = models.ForeignKey(VehicleItem, on_delete=models.CASCADE, related_name='seat_item_set')
-    label = models.CharField(max_length=5, null= True)
+    vehicle_item = models.ForeignKey(VehicleItem, on_delete=models.CASCADE, related_name='seat_items')
+    label = models.CharField(max_length=5, null=True)
     STATES = (
         ('unavailable', 'unavailable'),
         ('available', 'available'),
