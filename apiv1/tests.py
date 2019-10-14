@@ -1,9 +1,11 @@
 ''' Testing module for api '''
 from datetime import date, time
+import json
 
 from django.test import TestCase
 
 from .models import Layout, Route, Seat, Vehicle, VehicleItem, VehicleType
+from .serializers import VehicleItemSerializer
 
 
 class LayoutTestCase(TestCase):
@@ -39,6 +41,10 @@ class VehicleItemTestCase(TestCase):
     def test_layout(self):
         ''' Creates a vehicle item object and verifies by priting the seat items '''
         print(self.vehicle_item)
-        for seat_item in self.vehicle_item.seat_item_set.all():
+        for seat_item in self.vehicle_item.seat_items.all():
             print(seat_item)
         self.assertEqual(self.vehicle_item.vehicle.vehicle_type.layout.name, 'Super Deluxe Layout')
+
+    def test_layout_serializer(self):
+        ''' Creates a vehicle item object and verifies by priting the seat items '''
+        print(json.dumps(VehicleItemSerializer(self.vehicle_item).data, indent=2))
