@@ -67,12 +67,18 @@ def vehicles(request):
     View for handling tasks related to vehicle model
     Example json for post is:
     {
-     "source": source,
-     "destination": destination,
      "vehicleType": 1,
      "numberPlate": xyz,
     }
     '''
+    if request.method == "POST":
+        try:
+            request_json = json.loads(request.body.decode('utf-8'))
+            vehicle_type = VehicleType.objects.get(id=request_json['vehicleType'])
+            Vehicle.objects.create(vehicle_type=vehicle_type, number_plate=request_json['numberPlate'])
+            return JsonResponse({'success': 'Successfully created the vehicle'})
+        except (KeyError, json.decoder.JSONDecodeError, VehicleType.DoesNotExist) as exp:
+            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
 
     response = []
     vehicle_objects = Vehicle.objects.all()
