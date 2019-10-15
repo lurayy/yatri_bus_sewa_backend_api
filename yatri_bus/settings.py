@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'apiv1',
     'corsheaders',
     'django.contrib.admin',
+    'django.contrib.admindocs',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

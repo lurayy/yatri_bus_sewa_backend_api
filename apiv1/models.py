@@ -39,7 +39,7 @@ class Seat(models.Model):
 class VehicleType(models.Model):
     ''' For Storing data about the vehicle type.'''
     name = models.CharField(max_length=255)
-    layout = models.ForeignKey(Layout, on_delete=models.SET_NULL, null=True)
+    layout = models.ForeignKey(Layout, on_delete=models.CASCADE)
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
@@ -53,10 +53,13 @@ class Route(models.Model):
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
 
+    class Meta:
+        unique_together = ['source', 'destination']
+
 
 class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
-    vehicle_type = models.ForeignKey(VehicleType, on_delete=models.SET_NULL, null=True)
+    vehicle_type = models.ForeignKey(VehicleType, on_delete=models.CASCADE,)
     number_plate = models.CharField(max_length=255)
 
     def __str__(self):
