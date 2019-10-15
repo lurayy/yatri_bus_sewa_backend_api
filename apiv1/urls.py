@@ -5,4 +5,5 @@ from . import views
 
 urlpatterns = [
     path('layouts/', views.layouts, name='layouts'),
+    path('routes/', views.routes, name='routes'),
 ]
