@@ -53,6 +53,9 @@ class Route(models.Model):
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
 
+    class Meta:
+        unique_together = ['source', 'destination']
+
 
 class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
