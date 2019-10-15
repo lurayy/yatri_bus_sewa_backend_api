@@ -3,13 +3,20 @@
 from rest_framework import serializers
 
 from .models import VehicleItem, SeatItem, Route, Vehicle, VehicleType
+from .utils import layout_to_json
 
 
 class VehicleTypeSerializer(serializers.ModelSerializer):
     ''' Serializer class for VehicleType model '''
+    layout = serializers.SerializerMethodField()
+
     class Meta:
         model = VehicleType
         fields = '__all__'
+
+    def get_layout(self, obj):
+        ''' Serializer function for layout field '''
+        return layout_to_json(obj.layout)
 
 
 class VehicleSerializer(serializers.ModelSerializer):
