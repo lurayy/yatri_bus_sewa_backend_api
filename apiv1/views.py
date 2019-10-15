@@ -4,8 +4,8 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from .models import Layout, Route
-from .serializers import RouteSerializer
+from .models import Layout, Route, VehicleType, Vehicle
+from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
 from .utils import layout_to_json, json_to_layout
 
 
@@ -34,3 +34,23 @@ def routes(request):
     for route in route_objects:
         response.append(RouteSerializer(route))
     return JsonResponse({'routes': response})
+
+
+@require_http_methods(['GET'])
+def vehicle_types(request):
+    ''' View for handling tasks related to vehicle_type model '''
+    response = []
+    vehicle_type_objects = VehicleType.objects.all()
+    for vehicle_type in vehicle_type_objects:
+        response.append(VehicleTypeSerializer(vehicle_type))
+    return JsonResponse({'vehicleTypes': response})
+
+
+@require_http_methods(['GET'])
+def vehicles(request):
+    ''' View for handling tasks related to vehicle model '''
+    response = []
+    vehicle_objects = Vehicle.objects.all()
+    for vehicle in vehicle_objects:
+        response.append(VehicleSerializer(vehicle))
+    return JsonResponse({'vehicles': response})
