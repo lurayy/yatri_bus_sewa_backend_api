@@ -15,11 +15,12 @@ def model_to_dict(class_name):
 
 def layout_to_json(layout):
     ''' Takes in layout objects and gives all the data related to layout and it's seats'''
+    seats = Seat.objects.filter(layout=layout)
     response_json = {
+        'id': layout.id,
         'name': layout.name,
         'data': [],
     }
-    seats = Seat.objects.filter(layout=layout)
     if seats.count() == 0:
         return response_json
     position_x = []
