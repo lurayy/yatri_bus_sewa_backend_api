@@ -1,7 +1,7 @@
 ''' Utility module '''
-from .models import Layout, Seat
-
 from django.forms.models import model_to_dict as django_model_to_dict
+
+from .models import Layout, Seat
 
 
 def model_to_dict(class_name):
@@ -17,9 +17,9 @@ def layout_to_json(layout):
     ''' Takes in layout objects and gives all the data related to layout and it's seats'''
     seats = Seat.objects.filter(layout=layout)
     response_json = {
-        'name':layout.name,
+        'name': layout.name,
         'data': [],
-        }
+    }
     position_x = []
     position_y = []
     states = []
@@ -28,26 +28,27 @@ def layout_to_json(layout):
         position_y.append(int(seat.col))
         states.append(str(seat.state))
     for temp_x in range(max(position_x)+1):
-        print(temp_x)
         response_json['data'].append([])
         for _ in range(max(position_y)+1):
             response_json['data'][temp_x].append(
                 {
-                    'state':"none"
+                    'state': "none"
                 }
             )
-    for n in range(len(states)):
-        response_json['data'][position_x[n]][position_y[n]]['state'] = states[n]
+    for index, state in enumerate(states):
+        response_json['data'][position_x[index]][position_y[index]]['state'] = state
     return response_json
+
 
 def json_to_layout(data):
     ''' takes in the layout grid and creates seats with layout with it '''
     layout_name = data['name']
     layout_data = data['data']
-    layout = Layout.objects.get(name=str(layout_name))
-    for x in range(len(layout_data)):
-        for y in range(len(layout_data[x])):
-            if str(layout_data[x][y]['state']) != "none":
-                temp_seat = Seat.objects.get(layout=layout, col=y, row=x)
-                temp_seat.state = layout_data[x][y]['state']
+    layout = Layout.objects.create(name=str(layout_name))
+    for x_index, row in enumerate(layout_data):
+        for y_index, cell in enumerate(row):
+            if str(cell['state']) != "none":
+                temp_seat = Seat(layout=layout, col=y_index, row=x_index)
+                temp_seat.state = cell['state']
                 temp_seat.save()
+    return layout
