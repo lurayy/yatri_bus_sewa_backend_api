@@ -69,13 +69,22 @@ def vehicles(request):
     {
      "vehicleType": 1,
      "numberPlate": xyz,
+     "routes":[
+         2,
+         3,
+         (route_id)
+     ]
     }
     '''
     if request.method == "POST":
         try:
             request_json = json.loads(request.body.decode('utf-8'))
             vehicle_type = VehicleType.objects.get(id=request_json['vehicleType'])
-            Vehicle.objects.create(vehicle_type=vehicle_type, number_plate=request_json['numberPlate'])
+            vehicle = Vehicle.objects.create(vehicle_type=vehicle_type, number_plate=request_json['numberPlate'])
+            temp_routes = []
+            for temp_id in request_json['routes']:
+                temp_routes.append(Route.objects.get(id=int(temp_id)))
+            vehicle.routes.set(temp_routes)
             return JsonResponse({'success': 'Successfully created the vehicle'})
         except (KeyError, json.decoder.JSONDecodeError, VehicleType.DoesNotExist) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})

@@ -61,7 +61,7 @@ class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
     vehicle_type = models.ForeignKey(VehicleType, on_delete=models.CASCADE,)
     number_plate = models.CharField(max_length=255)
-
+    routes = models.ManyToManyField(Route)
     def __str__(self):
         return f'Vehicle {self.number_plate}'
 
@@ -72,8 +72,6 @@ class Vehicle(models.Model):
 class VehicleItem(models.Model):
     ''' Store information about instance of the 'Vehicle' that is active'''
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
-    route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True)
-
     departure_date = models.DateField()
     departure_time = models.TimeField()
     departure_point = models.CharField(max_length=255)

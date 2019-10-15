@@ -60,8 +60,10 @@ class VehicleItemTestCase(TestCase):
         vehicle_type = VehicleType.objects.create(name='Super Deluxe', layout=layout)
         route = Route.objects.create(source='Pokhara', destination='Kathmandu')
         vehicle = Vehicle.objects.create(vehicle_type=vehicle_type, number_plate='GA15')
+        vehicle.routes.add(route)
+        vehicle.save()
         self.vehicle_item = VehicleItem.objects.create(
-            vehicle=vehicle, route=route,
+            vehicle=vehicle,
             departure_date=date(2019, 10, 14), departure_time=time(12, 23, 12), departure_point='Bhairab tole')
 
     def test_layout(self):
