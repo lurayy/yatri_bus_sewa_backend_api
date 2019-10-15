@@ -6,6 +6,7 @@ from django.test import TestCase
 
 from .models import Layout, Route, Seat, Vehicle, VehicleItem, VehicleType
 from .serializers import VehicleItemSerializer
+from .utils import layout_to_json, json_to_layout
 
 
 class LayoutTestCase(TestCase):
@@ -19,9 +20,32 @@ class LayoutTestCase(TestCase):
     def test_layout(self):
         ''' Creates a layout and add two seats then verify if the seat count is 2 or not '''
         layout = Layout.objects.get(name='Super Deluxe Layout')
-        for seat in layout.seat_set.all():
-            print(seat)
         self.assertEqual(layout.seat_set.count(), 2)
+
+    def test_layout_to_json(self):
+        ''' Tests layout to json function '''
+        layout = Layout.objects.get(name='Super Deluxe Layout')
+        self.assertEqual(layout_to_json(layout), {
+            'name': 'Super Deluxe Layout',
+            'data': [
+                [{'state': 'available'}],
+                [{'state': 'available'}]]
+        })
+
+    def test_json_to_layout(self):
+        ''' Tests layout to json function '''
+        layout = json_to_layout({
+            'name': 'Deluxe Layout',
+            'data': [
+                [{'state': 'available'}],
+                [{'state': 'available'}]]
+        })
+        self.assertEqual(layout.name, 'Deluxe Layout')
+        self.assertEqual(layout.seat_set.count(), 2)
+        self.assertEqual(layout.seat_set.all()[0].col, 0)
+        self.assertEqual(layout.seat_set.all()[0].row, 0)
+        self.assertEqual(layout.seat_set.all()[1].col, 0)
+        self.assertEqual(layout.seat_set.all()[1].row, 1)
 
 
 class VehicleItemTestCase(TestCase):
@@ -40,9 +64,6 @@ class VehicleItemTestCase(TestCase):
 
     def test_layout(self):
         ''' Creates a vehicle item object and verifies by priting the seat items '''
-        print(self.vehicle_item)
-        for seat_item in self.vehicle_item.seat_items.all():
-            print(seat_item)
         self.assertEqual(self.vehicle_item.vehicle.vehicle_type.layout.name, 'Super Deluxe Layout')
 
     def test_layout_serializer(self):
