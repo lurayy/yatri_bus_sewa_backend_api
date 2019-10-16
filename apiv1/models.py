@@ -18,6 +18,7 @@ class Layout(models.Model):
     def save(self, *args, **kwargs):
         if self.name == "":
             raise Exception('Cannot save layout with no name')
+        self.name = str(self.name).lower().title()
         super(Layout, self).save(*args, **kwargs)
 
 
@@ -51,6 +52,10 @@ class VehicleType(models.Model):
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
 
+    def save(self, *args, **kwargs):
+        self.name = str(self.name).lower().title()
+        super(VehicleType, self).save(*args, **kwargs)
+
 
 class Route(models.Model):
     ''' Basic information about the route that the vehicle will take.'''
@@ -63,6 +68,10 @@ class Route(models.Model):
     class Meta:
         unique_together = ['source', 'destination']
 
+    def save(self, *args, **kwargs):
+        self.source = str(self.source).lower().title()
+        self.destination = str(self.destination).lower().title()
+        super(Route, self).save(*args, **kwargs)
 
 class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
@@ -76,6 +85,10 @@ class Vehicle(models.Model):
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
 
+    def save(self, *args, **kwargs):
+        self.number_plate = str(self.number_plate).upper()
+        super(Vehicle, self).save(*args, **kwargs)
+
 
 class VehicleItem(models.Model):
     ''' Store information about instance of the 'Vehicle' that is active'''
@@ -85,6 +98,7 @@ class VehicleItem(models.Model):
     departure_point = models.CharField(max_length=255)
 
     def save(self, *args, **kwargs):
+        self.departure_point = str(self.departure_point).lower().title()
         if not self.pk:
             super(VehicleItem, self).save(*args, **kwargs)
             seats = self.vehicle.vehicle_type.layout.seat_set.all()
