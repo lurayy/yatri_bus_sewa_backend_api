@@ -10,16 +10,15 @@ class Layout(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'Layout: {self.name}: {self.seat_set.count()}'
+        return f'Layout: {self.name}, {self.seat_set.count()} seats'
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
-    
+
     def save(self, *args, **kwargs):
         if self.name == "":
             raise Exception('Cannot save layout with no name')
         super(Layout, self).save(*args, **kwargs)
-
 
 
 class Seat(models.Model):
@@ -38,7 +37,7 @@ class Seat(models.Model):
     state = models.CharField(max_length=15, choices=STATES, default='available')
 
     def __str__(self):
-        return f'Seat: {self.layout.name}: {self.label}'
+        return f'Seat: {self.layout.name}, {self.label}'
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
@@ -70,8 +69,9 @@ class Vehicle(models.Model):
     vehicle_type = models.ForeignKey(VehicleType, on_delete=models.CASCADE,)
     number_plate = models.CharField(max_length=255)
     routes = models.ManyToManyField(Route)
+
     def __str__(self):
-        return f'Vehicle {self.number_plate}'
+        return f'Vehicle: {self.number_plate}'
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
@@ -94,7 +94,7 @@ class VehicleItem(models.Model):
             super(VehicleItem, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'VehicleItem: {self.vehicle}: {self.departure_date}'
+        return f'VehicleItem: {self.vehicle}, {self.departure_date}'
 
 
 class Booking(models.Model):
@@ -123,4 +123,4 @@ class SeatItem(models.Model):
     booking_details = models.ForeignKey(Booking, on_delete=models.SET_NULL, null=True, default=None)
 
     def __str__(self):
-        return f'SeatItem: {self.vehicle_item}: {self.label}'
+        return f'SeatItem: {self.vehicle_item}, {self.label}'
