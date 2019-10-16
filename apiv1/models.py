@@ -14,6 +14,12 @@ class Layout(models.Model):
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
+    
+    def save(self, *args, **kwargs):
+        if self.name == "":
+            raise Exception('Cannot save layout with no name')
+        super(Layout, self).save(*args, **kwargs)
+
 
 
 class Seat(models.Model):
