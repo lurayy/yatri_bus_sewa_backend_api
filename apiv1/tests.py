@@ -8,6 +8,7 @@ from .models import Layout, Route, Seat, Vehicle, VehicleItem, VehicleType
 from .utils import layout_to_json, json_to_layout
 
 LAYOUT_DATA = {
+    'id': 1,
     'name': 'Super Deluxe Layout',
     'data': [
         [{'state': 'available'}],
