@@ -17,7 +17,7 @@ def layouts(request):
             request_json = json.loads(request.body.decode('utf-8'))
             json_to_layout(request_json)
             return JsonResponse({'success': 'Successfully created the layout'})
-        except (KeyError, json.decoder.JSONDecodeError) as exp:
+        except (KeyError, json.decoder.JSONDecodeError, Exception) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
     response = []
     layout_objects = Layout.objects.all()

@@ -5,6 +5,8 @@ from django.db import models
 
 class Layout(models.Model):
     ''' Information about Seat layout '''
+    REQUIRED_FIELDS = ('name',)
+
     name = models.CharField(max_length=255)
 
     def __str__(self):

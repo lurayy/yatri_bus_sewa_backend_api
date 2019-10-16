@@ -47,6 +47,8 @@ def json_to_layout(data):
     ''' takes in the layout grid and creates seats with layout with it '''
     layout_name = data['name']
     layout_data = data['data']
+    if layout_name == "":
+        raise Exception("Layout Name is needed to create a layout")
     layout = Layout.objects.create(name=str(layout_name))
     for x_index, row in enumerate(layout_data):
         for y_index, cell in enumerate(row):
