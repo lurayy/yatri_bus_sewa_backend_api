@@ -5,6 +5,8 @@ from django.db import models
 
 class Layout(models.Model):
     ''' Information about Seat layout '''
+    REQUIRED_FIELDS = ('name',)
+
     name = models.CharField(max_length=255)
 
     def __str__(self):
@@ -12,6 +14,12 @@ class Layout(models.Model):
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
+    
+    def save(self, *args, **kwargs):
+        if self.name == "":
+            raise Exception('Cannot save layout with no name')
+        super(Layout, self).save(*args, **kwargs)
+
 
 
 class Seat(models.Model):
@@ -61,7 +69,7 @@ class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
     vehicle_type = models.ForeignKey(VehicleType, on_delete=models.CASCADE,)
     number_plate = models.CharField(max_length=255)
-
+    routes = models.ManyToManyField(Route)
     def __str__(self):
         return f'Vehicle {self.number_plate}'
 
@@ -72,8 +80,6 @@ class Vehicle(models.Model):
 class VehicleItem(models.Model):
     ''' Store information about instance of the 'Vehicle' that is active'''
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
-    route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True)
-
     departure_date = models.DateField()
     departure_time = models.TimeField()
     departure_point = models.CharField(max_length=255)
