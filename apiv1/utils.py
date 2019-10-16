@@ -26,20 +26,26 @@ def layout_to_json(layout):
     position_x = []
     position_y = []
     states = []
+    labels = []
     for seat in seats:
         position_x.append(int(seat.row))
         position_y.append(int(seat.col))
         states.append(str(seat.state))
+        labels.append(str(seat.label))
     for temp_x in range(max(position_x)+1):
         response_json['data'].append([])
         for _ in range(max(position_y)+1):
             response_json['data'][temp_x].append(
                 {
-                    'state': "none"
+                    'state': "none",
+                    'label': "none"
                 }
             )
     for index, state in enumerate(states):
         response_json['data'][position_x[index]][position_y[index]]['state'] = state
+    for index, label in enumerate(labels):
+        response_json['data'][position_x[index]][position_y[index]]['label'] = label
+
     return response_json
 
 
@@ -55,5 +61,6 @@ def json_to_layout(data):
             if str(cell['state']) != "none":
                 temp_seat = Seat(layout=layout, col=y_index, row=x_index)
                 temp_seat.state = cell['state']
+                temp_seat.label = cell['label']
                 temp_seat.save()
     return layout

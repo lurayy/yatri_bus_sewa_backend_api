@@ -109,3 +109,4 @@ def vehicles(request):
     for vehicle in vehicle_objects:
         response.append(VehicleSerializer(vehicle).data)
     return JsonResponse({'vehicles': response})
+    
