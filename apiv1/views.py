@@ -93,11 +93,13 @@ def vehicles(request):
             routes_objects = []
             for temp_routes in request_json['routes']:
                 try:
-                    temp_route_object = Route.objects.get(source=str(temp_routes['source']).lower().title(),
-                                                          destination=str(temp_routes['source']).lower().title())
-                except:
-                    temp_route_object = Route.objects.create(source=str(temp_routes['source']),
-                                                             destination=str(temp_routes['source']))
+                    temp_route_object = Route.objects.get(
+                        source=str(temp_routes['source']).lower().title(),
+                        destination=str(temp_routes['destination']).lower().title())
+                except Route.DoesNotExist:
+                    temp_route_object = Route.objects.create(
+                        source=str(temp_routes['source']),
+                        destination=str(temp_routes['destination']))
                 routes_objects.append(temp_route_object)
             vehicle.routes.set(routes_objects)
             return JsonResponse({'success': 'Successfully created the vehicle'})
@@ -109,4 +111,3 @@ def vehicles(request):
     for vehicle in vehicle_objects:
         response.append(VehicleSerializer(vehicle).data)
     return JsonResponse({'vehicles': response})
-    
