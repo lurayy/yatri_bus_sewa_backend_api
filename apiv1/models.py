@@ -1,7 +1,7 @@
 ''' Models module for api '''
 import django
 from django.db import models
-from .exceptions import RouteValueException
+from .exceptions import RouteValueException, VehicleItemException
 
 class Layout(models.Model):
     ''' Information about Seat layout '''
@@ -103,12 +103,20 @@ class Vehicle(models.Model):
 
 class VehicleItem(models.Model):
     ''' Store information about instance of the 'Vehicle' that is active'''
+    PERIODS = (
+        ('DAY', "Day"),
+        ('NIGHT', "Night")
+    )
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
     departure_date = models.DateField()
     departure_time = models.TimeField()
     departure_point = models.CharField(max_length=255)
+    departure_period = models.CharField(max_length=6, choices=PERIODS, default='DAY')
+    route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True)
 
     def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
+        if not str(self.departure_point).strip():
+            raise VehicleItemException('Departure Point Cannot be empty.')
         self.departure_point = str(self.departure_point).lower().title()
         if not self.pk:
             super(VehicleItem, self).save(*args, **kwargs)

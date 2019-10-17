@@ -1,5 +1,6 @@
 ''' Utility module '''
 from django.forms.models import model_to_dict as django_model_to_dict
+import dateutil.parser
 # import dateutil.parser
 from .models import Layout, Seat
 from .exceptions import LayoutJsonFormatException
@@ -66,6 +67,6 @@ def json_to_layout(data):
                 temp_seat.save()
     return layout
 
-# def datetime_str_to_datetime_object(date_str):
-#     ''' Parses datetime string to datetime object '''
-#     return dateutil.parser.parse(date_str)
+def datetime_str_to_object(date_str):
+    ''' Parses datetime string to datetime object '''
+    return dateutil.parser.parse(date_str)

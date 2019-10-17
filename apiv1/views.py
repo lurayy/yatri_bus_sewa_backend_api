@@ -4,10 +4,10 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from .models import Layout, Route, VehicleType, Vehicle
+from .models import Layout, Route, VehicleType, Vehicle, VehicleItem
 from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
-from .utils import layout_to_json, json_to_layout
-from .exceptions import LayoutJsonFormatException, RouteValueException
+from .utils import layout_to_json, json_to_layout, datetime_str_to_object
+from .exceptions import LayoutJsonFormatException, RouteValueException, VehicleItemException
 
 
 @require_http_methods(['GET', 'POST'])
@@ -118,42 +118,48 @@ def vehicles(request):
     return JsonResponse({'vehicles': response})
 
 
-# @require_http_methods(['GET', 'POST'])
-# def vehicle_items(request):
-#     '''
-#     View for handling tasks related to vehicle_item model
-#     request format:
-#     {
-#         "vehicle": 1,
-#         "departureTime": "xxx",
-#         "departurePoint": "xxx",
-#         "vehicleItems": [
-#             {
-#             "departureDate": "xxx"
-#             },
-#             {
-#             "departureDate": "xxx"
-#             },
-#             {
-#             "departureDate": "xxx"
-#             }
-#         ]
-#     }
-#     date format:
-#     {
-#         "date":"2019-11-16T18:15:00.000Z"
-#     }
-#     '''
-    # if request.method == "POST":
-    #     request_json = json.loads(request.body.decode('utf-8'))
-    #     try:
-    #         vechile = Vehicle.objects.get(id=int(request_json['vehicle']))
-
-    #     except(KeyError, json.decoder.JSONDecodeError, Vehicle.DoesNotExist) as exp:
-    #         return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-
-    # response = []
-    # vehicle_item_objects = VehicleItem.objects.all().filter(id=1)
-    # for vehicle in vehicle_objects:
-    #     response.append(VehicleSerializer(vehicle).data)
-    # return JsonResponse({'vehicles': response})
+@require_http_methods(['GET', 'POST'])
+def vehicle_items(request):
+    '''
+    View for handling tasks related to vehicle_item model
+    request format:
+    {
+        "vehicle": 1,
+        "departureTime": "2019-11-16T18:15:00.000",
+        "departurePoint": "somePlace",
+        "vehicleItems": [
+            {
+            "departureDate": "2019-11-16T08:15:00.000",
+            "route":1,
+            "departurePeriod":"Day",
+            },{
+            "departureDate": "2019-11-17T18:15:00.000",
+            "route":2,
+            "departurePeriod":"Night",
+            },{
+            "departureDate": "2019-11-19T08:15:00.000",
+            "route":1,
+            "departurePeriod":"Day",
+            }
+        ]
+    }
+    '''
+    if request.method == "POST":
+        request_json = json.loads(request.body.decode('utf-8'))
+        try:
+            vehicle = Vehicle.objects.get(id=int(request_json['vehicle']))
+            departure_time = datetime_str_to_object(request_json['departureTime']).time()
+            for item_data in request_json['vehicleItems']:
+                VehicleItem.objects.create(vehicle=vehicle,
+                                           departure_date=datetime_str_to_object(item_data['departureDate']).date(),
+                                           departure_time=departure_time,
+                                           departure_point=str(request_json['departurePoint']),
+                                           departure_period=str(item_data['departurePeriod']),
+                                           route=Route.objects.get(id=int(item_data['route']))
+                                           )
+            return JsonResponse({'success': 'Successfully created the vehicleItem.'})
+        except(KeyError, json.decoder.JSONDecodeError, Vehicle.DoesNotExist, VehicleItemException,
+               Route.DoesNotExist) as exp:
+            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    else:
+        return JsonResponse({'status':"not avaible right now"})
