@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
 from .models import Layout, Route, VehicleType, Vehicle, VehicleItem
-from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
+from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer, VehicleItemSerializer
 from .utils import layout_to_json, json_to_layout, datetime_str_to_object
 from .exceptions import LayoutJsonFormatException, RouteValueException, VehicleItemException
 
@@ -119,7 +119,7 @@ def vehicles(request):
 
 
 @require_http_methods(['GET', 'POST'])
-def vehicle_items(request):
+def vehicle_items(request, v_id=None):
     '''
     View for handling tasks related to vehicle_item model
     request format:
@@ -161,5 +161,11 @@ def vehicle_items(request):
         except(KeyError, json.decoder.JSONDecodeError, Vehicle.DoesNotExist, VehicleItemException,
                Route.DoesNotExist) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-    else:
-        return JsonResponse({'status':"not avaible right now"})
+
+    response = []
+    try:
+        vehicle_item = VehicleItem.objects.get(id=v_id)
+        response.append(VehicleItemSerializer(vehicle_item).data)
+        return JsonResponse({'vehicleItems': response})
+    except VehicleItem.DoesNotExist:
+        return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
