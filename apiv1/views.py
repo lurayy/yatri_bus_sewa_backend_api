@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 from .models import Layout, Route, VehicleType, Vehicle
 from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
 from .utils import layout_to_json, json_to_layout
+from .exceptions import LayoutJsonFormatException
 
 
 @require_http_methods(['GET', 'POST'])
@@ -17,7 +18,7 @@ def layouts(request):
             request_json = json.loads(request.body.decode('utf-8'))
             json_to_layout(request_json)
             return JsonResponse({'success': 'Successfully created the layout'})
-        except (KeyError, json.decoder.JSONDecodeError, Exception) as exp:
+        except (KeyError, json.decoder.JSONDecodeError, LayoutJsonFormatException) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
     response = []
     layout_objects = Layout.objects.all()
