@@ -29,11 +29,12 @@ class RouteSerializer(serializers.ModelSerializer):
 class VehicleSerializer(serializers.ModelSerializer):
     ''' Serializer class for VehicleSerializer model '''
     routes = RouteSerializer(many=True)
-    vehicle_type = VehicleTypeSerializer()
+    vehicleType = VehicleTypeSerializer(source='vehicle_type')
+    numberPlate = serializers.CharField(source='number_plate')
 
     class Meta:
         model = Vehicle
-        fields = '__all__'
+        fields = ['id', 'vehicleType', 'routes', 'numberPlate']
 
 
 class SeatItemSerializer(serializers.ModelSerializer):
