@@ -19,19 +19,20 @@ class VehicleTypeSerializer(serializers.ModelSerializer):
         return layout_to_json(obj.layout)
 
 
-class VehicleSerializer(serializers.ModelSerializer):
-    ''' Serializer class for VehicleSerializer model '''
-    vehicle_type = VehicleTypeSerializer()
-
-    class Meta:
-        model = Vehicle
-        fields = '__all__'
-
-
 class RouteSerializer(serializers.ModelSerializer):
     ''' Serializer class for RouteSerializer model '''
     class Meta:
         model = Route
+        fields = '__all__'
+
+
+class VehicleSerializer(serializers.ModelSerializer):
+    ''' Serializer class for VehicleSerializer model '''
+    routes = RouteSerializer(many=True)
+    vehicle_type = VehicleTypeSerializer()
+
+    class Meta:
+        model = Vehicle
         fields = '__all__'
 
 
