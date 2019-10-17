@@ -144,14 +144,16 @@ def vehicles(request):
 #         "date":"2019-11-16T18:15:00.000Z"
 #     }
 #     '''
-#     if request.method == "POST":
-#         request_json = json.loads(request.body.decode('utf-8'))
-#         try:
-#             vechile = Vehicle.objects.get(id=int(request_json['vehicle']))
+    # if request.method == "POST":
+    #     request_json = json.loads(request.body.decode('utf-8'))
+    #     try:
+    #         vechile = Vehicle.objects.get(id=int(request_json['vehicle']))
 
+    #     except(KeyError, json.decoder.JSONDecodeError, Vehicle.DoesNotExist) as exp:
+    #         return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
 
-#     response = []
-#     vehicle_item_objects = VehicleItem.objects.all().filter(id=1)
-#     for vehicle in vehicle_objects:
-#         response.append(VehicleSerializer(vehicle).data)
-#     return JsonResponse({'vehicles': response})
+    # response = []
+    # vehicle_item_objects = VehicleItem.objects.all().filter(id=1)
+    # for vehicle in vehicle_objects:
+    #     response.append(VehicleSerializer(vehicle).data)
+    # return JsonResponse({'vehicles': response})
