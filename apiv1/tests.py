@@ -11,8 +11,8 @@ LAYOUT_DATA = {
     'id': 1,
     'name': 'Super Deluxe Layout',
     'data': [
-        [{'state': 'available'}],
-        [{'state': 'available'}]]
+        [{'state': 'available', 'label':'A'}],
+        [{'state': 'available', 'label':'B'}]]
 }
 
 
@@ -21,8 +21,8 @@ class LayoutTestCase(TestCase):
 
     def setUp(self):
         layout = Layout.objects.create(name='Super Deluxe Layout')
-        Seat.objects.create(col=0, row=0, state='available', layout=layout)
-        Seat.objects.create(col=0, row=1, state='available', layout=layout)
+        Seat.objects.create(col=0, row=0, state='available', label='A', layout=layout)
+        Seat.objects.create(col=0, row=1, state='available', label='B', layout=layout)
 
     def test_layout(self):
         ''' Creates a layout and add two seats then verify if the seat count is 2 or not '''
@@ -56,8 +56,8 @@ class VehicleItemTestCase(TestCase):
 
     def setUp(self):
         layout = Layout.objects.create(name='Super Deluxe Layout')
-        Seat.objects.create(col=0, row=1, state='available', layout=layout)
-        Seat.objects.create(col=0, row=0, state='available', layout=layout)
+        Seat.objects.create(col=0, row=1, label='A', state='available', layout=layout)
+        Seat.objects.create(col=0, row=0, label='B',state='available', layout=layout)
         vehicle_type = VehicleType.objects.create(name='Super Deluxe', layout=layout)
         route = Route.objects.create(source='Pokhara', destination='Kathmandu')
         vehicle = Vehicle.objects.create(vehicle_type=vehicle_type, number_plate='GA15')

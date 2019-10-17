@@ -10,16 +10,16 @@ class Layout(models.Model):
     name = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'Layout: {self.name}: {self.seat_set.count()}'
+        return f'Layout: {self.name}, {self.seat_set.count()} seats'
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
-    
-    def save(self, *args, **kwargs):
+
+    def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
         if self.name == "":
             raise Exception('Cannot save layout with no name')
+        self.name = str(self.name).lower().title()
         super(Layout, self).save(*args, **kwargs)
-
 
 
 class Seat(models.Model):
@@ -38,7 +38,7 @@ class Seat(models.Model):
     state = models.CharField(max_length=15, choices=STATES, default='available')
 
     def __str__(self):
-        return f'Seat: {self.layout.name}: {self.label}'
+        return f'Seat: {self.layout.name}, {self.label}'
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
@@ -52,6 +52,10 @@ class VehicleType(models.Model):
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
 
+    def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
+        self.name = str(self.name).lower().title()
+        super(VehicleType, self).save(*args, **kwargs)
+
 
 class Route(models.Model):
     ''' Basic information about the route that the vehicle will take.'''
@@ -64,17 +68,27 @@ class Route(models.Model):
     class Meta:
         unique_together = ['source', 'destination']
 
+    def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
+        self.source = str(self.source).lower().title()
+        self.destination = str(self.destination).lower().title()
+        super(Route, self).save(*args, **kwargs)
+
 
 class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
     vehicle_type = models.ForeignKey(VehicleType, on_delete=models.CASCADE,)
     number_plate = models.CharField(max_length=255)
     routes = models.ManyToManyField(Route)
+
     def __str__(self):
-        return f'Vehicle {self.number_plate}'
+        return f'Vehicle: {self.number_plate}'
 
     def delete(self, using=None, keep_parents=False):
         raise Exception('Cannot delete a read only model object')
+
+    def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
+        self.number_plate = str(self.number_plate).upper()
+        super(Vehicle, self).save(*args, **kwargs)
 
 
 class VehicleItem(models.Model):
@@ -84,7 +98,8 @@ class VehicleItem(models.Model):
     departure_time = models.TimeField()
     departure_point = models.CharField(max_length=255)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
+        self.departure_point = str(self.departure_point).lower().title()
         if not self.pk:
             super(VehicleItem, self).save(*args, **kwargs)
             seats = self.vehicle.vehicle_type.layout.seat_set.all()
@@ -94,7 +109,7 @@ class VehicleItem(models.Model):
             super(VehicleItem, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'VehicleItem: {self.vehicle}: {self.departure_date}'
+        return f'VehicleItem: {self.vehicle}, {self.departure_date}'
 
 
 class Booking(models.Model):
@@ -123,4 +138,4 @@ class SeatItem(models.Model):
     booking_details = models.ForeignKey(Booking, on_delete=models.SET_NULL, null=True, default=None)
 
     def __str__(self):
-        return f'SeatItem: {self.vehicle_item}: {self.label}'
+        return f'SeatItem: {self.vehicle_item}, {self.label}'
