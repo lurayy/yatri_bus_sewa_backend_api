@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 from .models import Layout, Route, VehicleType, Vehicle
 from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
 from .utils import layout_to_json, json_to_layout
-from .exceptions import LayoutJsonFormatException
+from .exceptions import LayoutJsonFormatException, RouteValueException
 
 
 @require_http_methods(['GET', 'POST'])
@@ -98,9 +98,13 @@ def vehicles(request):
                         source=str(temp_routes['source']).lower().title(),
                         destination=str(temp_routes['destination']).lower().title())
                 except Route.DoesNotExist:
-                    temp_route_object = Route.objects.create(
-                        source=str(temp_routes['source']),
-                        destination=str(temp_routes['destination']))
+                    try:
+                        temp_route_object = Route.objects.create(
+                            source=str(temp_routes['source']),
+                            destination=str(temp_routes['destination']))
+                    except RouteValueException as exp:
+                        vehicle.delete(super_admin=True)
+                        return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
                 routes_objects.append(temp_route_object)
             vehicle.routes.set(routes_objects)
             return JsonResponse({'success': 'Successfully created the vehicle'})
@@ -112,3 +116,42 @@ def vehicles(request):
     for vehicle in vehicle_objects:
         response.append(VehicleSerializer(vehicle).data)
     return JsonResponse({'vehicles': response})
+
+
+# @require_http_methods(['GET', 'POST'])
+# def vehicle_items(request):
+#     '''
+#     View for handling tasks related to vehicle_item model
+#     request format:
+#     {
+#         "vehicle": 1,
+#         "departureTime": "xxx",
+#         "departurePoint": "xxx",
+#         "vehicleItems": [
+#             {
+#             "departureDate": "xxx"
+#             },
+#             {
+#             "departureDate": "xxx"
+#             },
+#             {
+#             "departureDate": "xxx"
+#             }
+#         ]
+#     }
+#     date format:
+#     {
+#         "date":"2019-11-16T18:15:00.000Z"
+#     }
+#     '''
+#     if request.method == "POST":
+#         request_json = json.loads(request.body.decode('utf-8'))
+#         try:
+#             vechile = Vehicle.objects.get(id=int(request_json['vehicle']))
+
+
+#     response = []
+#     vehicle_item_objects = VehicleItem.objects.all().filter(id=1)
+#     for vehicle in vehicle_objects:
+#         response.append(VehicleSerializer(vehicle).data)
+#     return JsonResponse({'vehicles': response})

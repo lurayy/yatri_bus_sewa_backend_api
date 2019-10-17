@@ -1,7 +1,7 @@
 ''' Models module for api '''
 import django
 from django.db import models
-
+from .exceptions import RouteValueException
 
 class Layout(models.Model):
     ''' Information about Seat layout '''
@@ -59,6 +59,7 @@ class VehicleType(models.Model):
 
 class Route(models.Model):
     ''' Basic information about the route that the vehicle will take.'''
+    REQUIRED_FIELDS = ('source', 'destination',)
     source = models.CharField(max_length=255)
     destination = models.CharField(max_length=255)
 
@@ -69,10 +70,16 @@ class Route(models.Model):
         unique_together = ['source', 'destination']
 
     def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
+        if not str(self.source).strip() or not str(self.destination).strip():
+            raise RouteValueException('Neither Route source nor Route destination can be empty.')
+        if str(self.source).lower().strip() == str(self.destination).lower().strip():
+            raise RouteValueException('Souce and Destination of Route cannot be same.')
         self.source = str(self.source).lower().title()
         self.destination = str(self.destination).lower().title()
         super(Route, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return self.source + " : " + self.destination
 
 class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
@@ -83,8 +90,11 @@ class Vehicle(models.Model):
     def __str__(self):
         return f'Vehicle: {self.number_plate}'
 
-    def delete(self, using=None, keep_parents=False):
-        raise Exception('Cannot delete a read only model object')
+    def delete(self, using=None, keep_parents=False, super_admin=None):
+        if super_admin:
+            super(Vehicle, self).delete()
+        else:
+            raise Exception('Cannot delete a read only model object')
 
     def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
         self.number_plate = str(self.number_plate).upper()
