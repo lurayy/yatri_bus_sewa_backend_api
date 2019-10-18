@@ -1,7 +1,7 @@
 ''' Models module for api '''
 import django
 from django.db import models
-from .exceptions import RouteValueException, VehicleItemException
+from .exceptions import RouteValueException, EmptyValueException
 
 class Layout(models.Model):
     ''' Information about Seat layout '''
@@ -28,14 +28,6 @@ class Seat(models.Model):
     label = models.CharField(max_length=5, default=None, blank=True, null=True)
     col = models.PositiveIntegerField()
     row = models.PositiveIntegerField()
-
-    STATES = (
-        ('unavailable', 'unavailable'),
-        ('available', 'available'),
-        ('locked', 'locked'),
-        ('booked', 'booked'),
-    )
-    state = models.CharField(max_length=15, choices=STATES, default='available')
 
     def __str__(self):
         return f'Seat: {self.layout.name}, {self.label}'
@@ -85,12 +77,11 @@ class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
     vehicle_type = models.ForeignKey(VehicleType, on_delete=models.CASCADE,)
     number_plate = models.CharField(max_length=255)
-    routes = models.ManyToManyField(Route)
 
     def __str__(self):
         return f'Vehicle: {self.number_plate}'
 
-    def delete(self, using=None, keep_parents=False, super_admin=None):
+    def delete(self, using=None, keep_parents=False, super_admin=None): # pylint: disable=arguments-differ
         if super_admin:
             super(Vehicle, self).delete()
         else:
@@ -101,51 +92,48 @@ class Vehicle(models.Model):
         super(Vehicle, self).save(*args, **kwargs)
 
 
-class VehicleItem(models.Model):
-    ''' Store information about instance of the 'Vehicle' that is active'''
+class ActiveDateTime(models.Model):
+    ''' Model to store date time '''
+    date = models.DateField()
+    time = models.TimeField()
     PERIODS = (
         ('DAY', "Day"),
         ('NIGHT', "Night")
     )
-    vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
-    departure_date = models.DateField()
-    departure_time = models.TimeField()
-    departure_point = models.CharField(max_length=255)
-    departure_period = models.CharField(max_length=6, choices=PERIODS, default='DAY')
-    route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True)
+    period = models.CharField(max_length=6, choices=PERIODS, default='DAY')
+
+class PickUpPoint(models.Model):
+    ''' Model to store pickup point info '''
+    name = models.CharField(max_length=255)
 
     def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
-        if not str(self.departure_point).strip():
-            raise VehicleItemException('Departure Point Cannot be empty.')
-        self.departure_point = str(self.departure_point).lower().title()
-        if not self.pk:
-            super(VehicleItem, self).save(*args, **kwargs)
-            seats = self.vehicle.vehicle_type.layout.seat_set.all()
-            for seat in seats:
-                SeatItem.objects.create(vehicle_item=self, label=seat.label, state=seat.state)
-        else:
-            super(VehicleItem, self).save(*args, **kwargs)
+        if not str(self.name).strip():
+            raise EmptyValueException('Departure Point Cannot be empty.')
+        self.name = str(self.name).lower().title()
+
+
+class ScheduledVehicle(models.Model):
+    ''' Store information about instance of the 'Vehicle' that is active'''
+    vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
+    route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True)
+    active_stages = models.ManyToManyField(ActiveDateTime)
+    pick_up_points = models.ManyToManyField(PickUpPoint)
 
     def __str__(self):
-        return f'VehicleItem: {self.vehicle}, {self.departure_date}'
+        return f'VehicleItem: {self.vehicle}'
 
 
 class Booking(models.Model):
     ''' Stores booking details'''
+    trip = models.ForeignKey(ScheduledVehicle, on_delete=models.SET_NULL, null=True)
     booked_by = models.CharField(max_length=255)            # will be a linked to user profile in future
-    booked_for = models.CharField(max_length=255)
-    total_amount_paid = models.PositiveIntegerField()
+    passenger_name = models.CharField(max_length=255)
+    passenger_phone = models.PositiveIntegerField()
+    amount = models.PositiveIntegerField()
+    seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
     is_paid = models.BooleanField()                         # will be a selection after we decide what to implement
     payment_method = models.CharField(max_length=255)
     date = models.DateTimeField(default=django.utils.timezone.now)
-    # for ease of info extraction i.e bus number
-    vehicle_item = models.ForeignKey(VehicleItem, on_delete=models.SET_NULL, null=True)
-
-
-class SeatItem(models.Model):
-    ''' Seat  Instance linked to the active vehicle instance and layout instance '''
-    vehicle_item = models.ForeignKey(VehicleItem, on_delete=models.CASCADE, related_name='seat_items')
-    label = models.CharField(max_length=5, null=True)
     STATES = (
         ('unavailable', 'unavailable'),
         ('available', 'available'),
@@ -153,7 +141,4 @@ class SeatItem(models.Model):
         ('booked', 'booked'),
     )
     state = models.CharField(max_length=15, choices=STATES, default='available')
-    booking_details = models.ForeignKey(Booking, on_delete=models.SET_NULL, null=True, default=None)
-
-    def __str__(self):
-        return f'SeatItem: {self.vehicle_item}, {self.label}'
+    

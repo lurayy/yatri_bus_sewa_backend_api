@@ -6,6 +6,6 @@ class LayoutJsonFormatException(Exception):
 
 class RouteValueException(Exception):
     ''' Raised when source or destination of route is empty '''
-    
-class VehicleItemException(Exception):
-    ''' Raised when departure point of VehicleItem is empty '''
+
+class EmptyValueException(Exception):
+    ''' Raised when a value is empty or blank '''

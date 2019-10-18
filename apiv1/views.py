@@ -4,38 +4,38 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from .models import Layout, Route, VehicleType, Vehicle, VehicleItem
-from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer, VehicleItemSerializer
+# from .models import Layout, Route, VehicleType, Vehicle, ScheduledVehicle
+# from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
 from .utils import layout_to_json, json_to_layout, datetime_str_to_object
-from .exceptions import LayoutJsonFormatException, RouteValueException, VehicleItemException
+from .exceptions import LayoutJsonFormatException, RouteValueException, EmptyValueException
 
 
 @require_http_methods(['GET', 'POST'])
 def layouts(request):
     ''' View for handling tasks related to layout model '''
-    if request.method == "POST":
-        try:
-            request_json = json.loads(request.body.decode('utf-8'))
-            json_to_layout(request_json)
-            return JsonResponse({'success': 'Successfully created the layout'})
-        except (KeyError, json.decoder.JSONDecodeError, LayoutJsonFormatException) as exp:
-            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-    response = []
-    layout_objects = Layout.objects.all()
-    for layout in layout_objects:
-        response.append(layout_to_json(layout))
-    return JsonResponse({'layouts': response})
-
+    # if request.method == "POST":
+    #     try:
+    #         request_json = json.loads(request.body.decode('utf-8'))
+    #         json_to_layout(request_json)
+    #         return JsonResponse({'success': 'Successfully created the layout'})
+    #     except (KeyError, json.decoder.JSONDecodeError, LayoutJsonFormatException) as exp:
+    #         return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    # response = []
+    # layout_objects = Layout.objects.all()
+    # for layout in layout_objects:
+    #     response.append(layout_to_json(layout))
+    # return JsonResponse({'layouts': response})
+    pass
 
 @require_http_methods(['GET'])
 def routes(request):
     ''' View for handling tasks related to route model '''
-    response = []
-    route_objects = Route.objects.all()
-    for route in route_objects:
-        response.append(RouteSerializer(route))
-    return JsonResponse({'routes': response})
-
+    # response = []
+    # route_objects = Route.objects.all()
+    # for route in route_objects:
+    #     response.append(RouteSerializer(route))
+    # return JsonResponse({'routes': response})
+    pass
 
 @require_http_methods(['GET', 'POST'])
 def vehicle_types(request):
@@ -47,20 +47,20 @@ def vehicle_types(request):
      "layout": 1,
     }
     '''
-    if request.method == "POST":
-        try:
-            request_json = json.loads(request.body.decode('utf-8'))
-            layout = Layout.objects.get(id=request_json['layout'])
-            VehicleType.objects.create(name=request_json['name'], layout=layout)
-            return JsonResponse({'success': 'Successfully created the vehicle type'})
-        except (KeyError, json.decoder.JSONDecodeError, Layout.DoesNotExist) as exp:
-            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-    response = []
-    vehicle_type_objects = VehicleType.objects.all()
-    for vehicle_type in vehicle_type_objects:
-        response.append(VehicleTypeSerializer(vehicle_type).data)
-    return JsonResponse({'vehicleTypes': response})
-
+    # if request.method == "POST":
+    #     try:
+    #         request_json = json.loads(request.body.decode('utf-8'))
+    #         layout = Layout.objects.get(id=request_json['layout'])
+    #         VehicleType.objects.create(name=request_json['name'], layout=layout)
+    #         return JsonResponse({'success': 'Successfully created the vehicle type'})
+    #     except (KeyError, json.decoder.JSONDecodeError, Layout.DoesNotExist) as exp:
+    #         return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    # response = []
+    # vehicle_type_objects = VehicleType.objects.all()
+    # for vehicle_type in vehicle_type_objects:
+    #     response.append(VehicleTypeSerializer(vehicle_type).data)
+    # return JsonResponse({'vehicleTypes': response})
+    pass
 
 @require_http_methods(['GET', 'POST'])
 def vehicles(request):
@@ -86,36 +86,36 @@ def vehicles(request):
      ]
     }
     '''
-    if request.method == "POST":
-        try:
-            request_json = json.loads(request.body.decode('utf-8'))
-            vehicle_type = VehicleType.objects.get(id=request_json['vehicleType'])
-            vehicle = Vehicle.objects.create(vehicle_type=vehicle_type, number_plate=request_json['numberPlate'])
-            routes_objects = []
-            for temp_routes in request_json['routes']:
-                try:
-                    temp_route_object = Route.objects.get(
-                        source=str(temp_routes['source']).lower().title(),
-                        destination=str(temp_routes['destination']).lower().title())
-                except Route.DoesNotExist:
-                    try:
-                        temp_route_object = Route.objects.create(
-                            source=str(temp_routes['source']),
-                            destination=str(temp_routes['destination']))
-                    except RouteValueException as exp:
-                        vehicle.delete(super_admin=True)
-                        return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-                routes_objects.append(temp_route_object)
-            vehicle.routes.set(routes_objects)
-            return JsonResponse({'success': 'Successfully created the vehicle'})
-        except (KeyError, json.decoder.JSONDecodeError, VehicleType.DoesNotExist) as exp:
-            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-
-    response = []
-    vehicle_objects = Vehicle.objects.all()
-    for vehicle in vehicle_objects:
-        response.append(VehicleSerializer(vehicle).data)
-    return JsonResponse({'vehicles': response})
+    # if request.method == "POST":
+    #     try:
+    #         request_json = json.loads(request.body.decode('utf-8'))
+    #         vehicle_type = VehicleType.objects.get(id=request_json['vehicleType'])
+    #         vehicle = Vehicle.objects.create(vehicle_type=vehicle_type, number_plate=request_json['numberPlate'])
+    #         routes_objects = []
+    #         for temp_routes in request_json['routes']:
+    #             try:
+    #                 temp_route_object = Route.objects.get(
+    #                     source=str(temp_routes['source']).lower().title(),
+    #                     destination=str(temp_routes['destination']).lower().title())
+    #             except Route.DoesNotExist:
+    #                 try:
+    #                     temp_route_object = Route.objects.create(
+    #                         source=str(temp_routes['source']),
+    #                         destination=str(temp_routes['destination']))
+    #                 except RouteValueException as exp:
+    #                     vehicle.delete(super_admin=True)
+    #                     return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    #             routes_objects.append(temp_route_object)
+    #         vehicle.routes.set(routes_objects)
+    #         return JsonResponse({'success': 'Successfully created the vehicle'})
+    #     except (KeyError, json.decoder.JSONDecodeError, VehicleType.DoesNotExist) as exp:
+    #         return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    pass
+    # response = []
+    # vehicle_objects = Vehicle.objects.all()
+    # for vehicle in vehicle_objects:
+    #     response.append(VehicleSerializer(vehicle).data)
+    # return JsonResponse({'vehicles': response})
 
 
 @require_http_methods(['GET', 'POST'])
@@ -144,28 +144,29 @@ def vehicle_items(request, v_id=None):
         ]
     }
     '''
-    if request.method == "POST":
-        request_json = json.loads(request.body.decode('utf-8'))
-        try:
-            vehicle = Vehicle.objects.get(id=int(request_json['vehicle']))
-            departure_time = datetime_str_to_object(request_json['departureTime']).time()
-            for item_data in request_json['vehicleItems']:
-                VehicleItem.objects.create(vehicle=vehicle,
-                                           departure_date=datetime_str_to_object(item_data['departureDate']).date(),
-                                           departure_time=departure_time,
-                                           departure_point=str(request_json['departurePoint']),
-                                           departure_period=str(item_data['departurePeriod']),
-                                           route=Route.objects.get(id=int(item_data['route']))
-                                           )
-            return JsonResponse({'success': 'Successfully created the vehicleItem.'})
-        except(KeyError, json.decoder.JSONDecodeError, Vehicle.DoesNotExist, VehicleItemException,
-               Route.DoesNotExist) as exp:
-            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    # if request.method == "POST":
+    #     request_json = json.loads(request.body.decode('utf-8'))
+    #     try:
+    #         vehicle = Vehicle.objects.get(id=int(request_json['vehicle']))
+    #         departure_time = datetime_str_to_object(request_json['departureTime']).time()
+    #         for item_data in request_json['vehicleItems']:
+    #             VehicleItem.objects.create(vehicle=vehicle,
+    #                                        departure_date=datetime_str_to_object(item_data['departureDate']).date(),
+    #                                        departure_time=departure_time,
+    #                                        departure_point=str(request_json['departurePoint']),
+    #                                        departure_period=str(item_data['departurePeriod']),
+    #                                        route=Route.objects.get(id=int(item_data['route']))
+    #                                        )
+    #         return JsonResponse({'success': 'Successfully created the vehicleItem.'})
+    #     except(KeyError, json.decoder.JSONDecodeError, Vehicle.DoesNotExist, EmptyValueException,
+    #            Route.DoesNotExist) as exp:
+    #         return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
 
-    response = []
-    try:
-        vehicle_item = VehicleItem.objects.get(id=v_id)
-        response.append(VehicleItemSerializer(vehicle_item).data)
-        return JsonResponse({'vehicleItems': response})
-    except VehicleItem.DoesNotExist:
-        return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    # response = []
+    # try:
+    #     vehicle_item = VehicleItem.objects.get(id=v_id)
+    #     response.append(VehicleItemSerializer(vehicle_item).data)
+    #     return JsonResponse({'vehicleItems': response})
+    # except VehicleItem.DoesNotExist:
+    #     return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    pass
