@@ -1,6 +1,6 @@
 ''' Searializers module for models of api '''
 from rest_framework import serializers
-from .models import VehicleType, Route, Vehicle
+from .models import VehicleType, Route, Vehicle, Schedule, ScheduledVehicle
 from .utils import layout_to_json
 
 
@@ -32,3 +32,21 @@ class VehicleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vehicle
         fields = ['id', 'vehicleType', 'numberPlate']
+
+
+class ScheduleSerializer(serializers.ModelSerializer):
+    ''' Serializere class for Schedule Model'''
+    route = RouteSerializer()
+
+    class Meta:
+        model = Schedule
+        fields = '__all__'
+
+class ScheduledVehicleSerializer(serializers.ModelSerializer):
+    ''' Serializere class for ScheduledVehicle Model '''
+    vehicle = VehicleSerializer()
+    schedule = ScheduleSerializer(many=True)
+
+    class Meta:
+        model = ScheduledVehicle
+        fields = '__all__'

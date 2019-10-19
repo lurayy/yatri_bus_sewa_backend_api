@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
 from .models import Layout, Route, Seat, VehicleType, Vehicle, ScheduledVehicle, Schedule, Booking
-from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
+from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer, ScheduledVehicleSerializer
 from .utils import layout_to_json, json_to_layout, datetime_str_to_object, create_booking_instances
 from .exceptions import LayoutJsonFormatException, RouteValueException, EmptyValueException
 from django.db import IntegrityError
@@ -132,7 +132,7 @@ def vehicles(request):
 
 
 @require_http_methods(['GET', 'POST'])
-def scheduled_vehicles(request, v_id=None):
+def scheduled_vehicles(request, v_id=None, s_id=None):
     '''
     View for handling tasks related to vehicle_item model
     request format:
@@ -186,9 +186,19 @@ def scheduled_vehicles(request, v_id=None):
                     ))
             scheduled_vehicle.schedule.set(schedule_objects)
             scheduled_vehicle.save()
-            create_booking_instances(scheduled_vehicle)
             return JsonResponse({'success': 'Successfully created the vehicle schedule'})
 
         except (KeyError, json.decoder.JSONDecodeError, Route.DoesNotExist, Vehicle.DoesNotExist) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-    return JsonResponse({'Error': 'Work in progress'})
+    response = []
+    if v_id:
+        try:
+            s_vehicle = ScheduledVehicle.objects.get(id=int(v_id))
+            response.append(ScheduledVehicleSerializer(s_vehicle).data)
+            return JsonResponse({'scheduledVehicle': response[0]})
+        except (KeyError, json.decoder.JSONDecodeError, ScheduledVehicle.DoesNotExist, Schedule.DoesNotExist) as exp:
+            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    scheduled_vehicle_objects = ScheduledVehicle.objects.all()
+    for s_vehicle in scheduled_vehicle_objects:
+        response.append(ScheduledVehicleSerializer(s_vehicle).data)
+    return JsonResponse({'scheduledVehicles': response})

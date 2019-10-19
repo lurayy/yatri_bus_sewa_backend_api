@@ -160,18 +160,18 @@ class Booking(models.Model):
     schedule = models.ForeignKey(Schedule, on_delete=models.SET_NULL, null=True)
 
     # will be a linked to user profile in future
-    booked_by = models.CharField(max_length=255, null=True)
+    booked_by = models.CharField(max_length=255)
 
-    passenger_name = models.CharField(max_length=255, null=True)
-    passenger_phone = models.PositiveIntegerField(null=True)
-    amount = models.PositiveIntegerField(null=True)
+    passenger_name = models.CharField(max_length=255)
+    passenger_phone = models.PositiveIntegerField()
+    amount = models.PositiveIntegerField()
     seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
 
     # will be a selection after we decide what to implement
     is_paid = models.BooleanField(default=False)
 
-    payment_method = models.CharField(max_length=255, null=True)
-    booked_on = models.DateTimeField(null=True)
+    payment_method = models.CharField(max_length=255)
+    booked_on = models.DateTimeField()
     STATES = (
         ('unavailable', 'unavailable'),
         ('available', 'available'),
