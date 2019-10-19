@@ -4,38 +4,67 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
-# from .models import Layout, Route, VehicleType, Vehicle, ScheduledVehicle
-# from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
+from .models import Layout, Route, VehicleType, Vehicle, ScheduledVehicle, Route
+from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
 from .utils import layout_to_json, json_to_layout, datetime_str_to_object
 from .exceptions import LayoutJsonFormatException, RouteValueException, EmptyValueException
 
 
 @require_http_methods(['GET', 'POST'])
 def layouts(request):
-    ''' View for handling tasks related to layout model '''
-    # if request.method == "POST":
-    #     try:
-    #         request_json = json.loads(request.body.decode('utf-8'))
-    #         json_to_layout(request_json)
-    #         return JsonResponse({'success': 'Successfully created the layout'})
-    #     except (KeyError, json.decoder.JSONDecodeError, LayoutJsonFormatException) as exp:
-    #         return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-    # response = []
-    # layout_objects = Layout.objects.all()
-    # for layout in layout_objects:
-    #     response.append(layout_to_json(layout))
-    # return JsonResponse({'layouts': response})
-    pass
+    ''' View for handling tasks related to layout model
+    
+    {
+        "name": "Test Layout two",
+        "data": [
+          [
+            { "is_active": true, "label": "a" },
+            { "is_active": true, "label": "b" },
+            { "is_active": true, "label": "c" },
+            { "is_active": true, "label": "d" },
+            { "is_active": true, "label": "e" },
+            { "is_active": true, "label": "f" }
+          ],
+          [
+            { "is_active": true, "label": "g" },
+            { "is_active": false, "label": "h" },
+            { "is_active": false, "label": "i" },
+            { "is_active": false, "label": "j" },
+            { "is_active": false, "label": "k" },
+            { "is_active": false, "label": "l" }
+          ],
+          [
+            { "is_active": true, "label": "m" },
+            { "is_active": true, "label": "n" },
+            { "is_active": true, "label": "o" },
+            { "is_active": true, "label": "p" },
+            { "is_active": true, "label": "q" },
+            { "is_active": true, "label": "r" }
+          ]
+        ]
+      }
+    '''
+    if request.method == "POST":
+        try:
+            request_json = json.loads(request.body.decode('utf-8'))
+            json_to_layout(request_json)
+            return JsonResponse({'success': 'Successfully created the layout'})
+        except (KeyError, json.decoder.JSONDecodeError, LayoutJsonFormatException) as exp:
+            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    response = []
+    layout_objects = Layout.objects.all()
+    for layout in layout_objects:
+        response.append(layout_to_json(layout))
+    return JsonResponse({'layouts': response})
 
 @require_http_methods(['GET'])
 def routes(request):
     ''' View for handling tasks related to route model '''
-    # response = []
-    # route_objects = Route.objects.all()
-    # for route in route_objects:
-    #     response.append(RouteSerializer(route))
-    # return JsonResponse({'routes': response})
-    pass
+    response = []
+    route_objects = Route.objects.all()
+    for route in route_objects:
+        response.append(RouteSerializer(route))
+    return JsonResponse({'routes': response})
 
 @require_http_methods(['GET', 'POST'])
 def vehicle_types(request):
