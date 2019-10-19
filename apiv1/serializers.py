@@ -1,7 +1,5 @@
 ''' Searializers module for models of api '''
-
 from rest_framework import serializers
-
 from .models import VehicleType, Route, Vehicle
 from .utils import layout_to_json
 

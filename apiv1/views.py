@@ -13,7 +13,6 @@ from .exceptions import LayoutJsonFormatException, RouteValueException, EmptyVal
 @require_http_methods(['GET', 'POST'])
 def layouts(request):
     ''' View for handling tasks related to layout model
-    
     {
         "name": "Test Layout two",
         "data": [
@@ -57,13 +56,14 @@ def layouts(request):
         response.append(layout_to_json(layout))
     return JsonResponse({'layouts': response})
 
+
 @require_http_methods(['GET'])
 def routes(request):
     ''' View for handling tasks related to route model '''
     response = []
     route_objects = Route.objects.all()
     for route in route_objects:
-        response.append(RouteSerializer(route))
+        response.append(RouteSerializer(route).data)
     return JsonResponse({'routes': response})
 
 @require_http_methods(['GET', 'POST'])
