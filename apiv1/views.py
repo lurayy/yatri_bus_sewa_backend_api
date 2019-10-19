@@ -4,10 +4,11 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
-from .models import Layout, Route, VehicleType, Vehicle, ScheduledVehicle, Route
+from .models import Layout, Route, Seat, VehicleType, Vehicle, ScheduledVehicle, Schedule, Booking
 from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer
-from .utils import layout_to_json, json_to_layout, datetime_str_to_object
+from .utils import layout_to_json, json_to_layout, datetime_str_to_object, create_booking_instances
 from .exceptions import LayoutJsonFormatException, RouteValueException, EmptyValueException
+from django.db import IntegrityError
 
 
 @require_http_methods(['GET', 'POST'])
@@ -57,9 +58,23 @@ def layouts(request):
     return JsonResponse({'layouts': response})
 
 
-@require_http_methods(['GET'])
+@require_http_methods(['GET', 'POST'])
 def routes(request):
-    ''' View for handling tasks related to route model '''
+    '''
+    View for handling tasks related to route model
+    {
+        "source":"Kathmandu",
+        "destination":"Pisd"
+    }
+     '''
+    if request.method == "POST":
+        try:
+            request_json = json.loads(request.body.decode('utf-8'))
+            route = Route.objects.create(source=request_json['source'], destination=request_json['destination'])
+            return JsonResponse({'success': 'Successfully created the route'})
+        except (KeyError, json.decoder.JSONDecodeError, EmptyValueException, RouteValueException,
+                IntegrityError) as exp:
+            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
     response = []
     route_objects = Route.objects.all()
     for route in route_objects:
@@ -72,8 +87,8 @@ def vehicle_types(request):
     View for handling tasks related to vehicle_type model
     Example json for post is:
     {
-     "name": name,
-     "layout": 1,
+     "name": "TestVehicleType one",
+     "layout": 1
     }
     '''
     if request.method == "POST":
@@ -117,73 +132,75 @@ def vehicles(request):
 
 
 @require_http_methods(['GET', 'POST'])
-def vehicle_items(request, v_id=None):
+def scheduled_vehicles(request, v_id=None):
     '''
     View for handling tasks related to vehicle_item model
     request format:
     {
         "vehicle": 1,
-        "departureTime": "2019-11-16T18:15:00.000",
-        "departurePoint": "somePlace",
-        "vehicleItems": [
+        "schedule":
+        [
             {
-            "departureDate": "2019-11-16T08:15:00.000",
-            "route":1,
-            "departurePeriod":"Day",
-            },{
-            "departureDate": "2019-11-17T18:15:00.000",
-            "route":2,
-            "departurePeriod":"Night",
-            },{
-            "departureDate": "2019-11-19T08:15:00.000",
-            "route":1,
-            "departurePeriod":"Day",
-            }
+                "route":1,
+                pickUpPoints: [
+                    'new road',
+                    'chiplaedunga'
+                ],
+                "date": "2019-11-16T08:15:00.000",
+                "time": "2019-11-16T18:15:00.000",
+                "nature":"Day",
+            },
+            {
+                "route":3,
+                pickUpPoints: [
+                    'new road',
+                    'chiplaedunga'
+                ],
+                "date": "2019-11-16T08:15:00.000",
+                "time": "2019-11-16T18:15:00.000",
+                "nature":"Day",
+            },
+            {
+                "route":1,
+                pickUpPoints: [
+                    'new road',
+                    'chiplaedunga'
+                ],
+                "date": "2019-11-16T08:15:00.000",
+                "time": "2019-11-16T18:15:00.000",
+                "nature":"Night",
+            },
         ]
     }
     '''
-    # if request.method == "POST":
-    #     request_json = json.loads(request.body.decode('utf-8'))
-    #     try:
-    #         vehicle = Vehicle.objects.get(id=int(request_json['vehicle']))
-    #         departure_time = datetime_str_to_object(request_json['departureTime']).time()
-    #         for item_data in request_json['vehicleItems']:
-    #             VehicleItem.objects.create(vehicle=vehicle,
-    #                                        departure_date=datetime_str_to_object(item_data['departureDate']).date(),
-    #                                        departure_time=departure_time,
-    #                                        departure_point=str(request_json['departurePoint']),
-    #                                        departure_period=str(item_data['departurePeriod']),
-    #                                        route=Route.objects.get(id=int(item_data['route']))
-    #                                        )
-    #         return JsonResponse({'success': 'Successfully created the vehicleItem.'})
-    #     except(KeyError, json.decoder.JSONDecodeError, Vehicle.DoesNotExist, EmptyValueException,
-    #            Route.DoesNotExist) as exp:
-    #         return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    if request.method == "POST":
+        try:
+            request_json = json.loads(request.body.decode('utf-8'))
+            scheduled_vehicle = ScheduledVehicle.objects.create(
+                vehicle=Vehicle.objects.get(id=int(request_json['vehicle']))
+                )
+            schedule_objects = []
+            for schedule_json in request_json['schedule']:
+                route = Route.objects.get(id=int(schedule_json['route']))
+                try:
+                    schedule_objects.append(Schedule.objects.get(
+                        route=route,
+                        date=datetime_str_to_object(schedule_json['date']).date(),
+                        time=datetime_str_to_object(schedule_json['time']).time(),
+                        nature=str(schedule_json['nature'])
+                    ))
+                except Schedule.DoesNotExist:
+                    schedule_objects.append(Schedule.objects.create(
+                        route=route,
+                        date=datetime_str_to_object(schedule_json['date']).date(),
+                        time=datetime_str_to_object(schedule_json['time']).time(),
+                        nature=str(schedule_json['nature'])
+                    ))
+            scheduled_vehicle.schedule.set(schedule_objects)
+            scheduled_vehicle.save()
+            create_booking_instances(scheduled_vehicle)
+            return JsonResponse({'success': 'Successfully created the vehicle schedule'})
 
-    # response = []
-    # try:
-    #     vehicle_item = VehicleItem.objects.get(id=v_id)
-    #     response.append(VehicleItemSerializer(vehicle_item).data)
-    #     return JsonResponse({'vehicleItems': response})
-    # except VehicleItem.DoesNotExist:
-    #     return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-
-
-
-# routes_objects = []
-#             for temp_routes in request_json['routes']:
-#                 try:
-#                     temp_route_object = Route.objects.get(
-#                         source=str(temp_routes['source']).lower().title(),
-#                         destination=str(temp_routes['destination']).lower().title())
-#                 except Route.DoesNotExist:
-#                     try:
-#                         temp_route_object = Route.objects.create(
-#                             source=str(temp_routes['source']),
-#                             destination=str(temp_routes['destination']))
-#                     except RouteValueException as exp:
-#                         vehicle.delete(super_admin=True)
-#                         return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-#                 routes_objects.append(temp_route_object)
-#             vehicle.routes.set(routes_objects)
-            
+        except (KeyError, json.decoder.JSONDecodeError, Route.DoesNotExist, Vehicle.DoesNotExist) as exp:
+            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    return JsonResponse({'Error': 'Work in progress'})

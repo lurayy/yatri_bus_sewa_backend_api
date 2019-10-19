@@ -48,6 +48,26 @@ class VehicleType(models.Model):
         self.name = str(self.name).lower().title()
         super(VehicleType, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return f'Layout: {self.name}, {self.layout.seat_set.count()} seats'
+
+
+class PickUpPoint(models.Model):
+    ''' Model to store pickup point info '''
+    name = models.CharField(max_length=255)
+
+    def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
+        if not self.pk:
+            if not str(self.name).strip():
+                raise EmptyValueException('Departure Point Cannot be empty.')
+            self.name = str(self.name).lower().title()
+            super(PickUpPoint, self).save(*args, **kwargs)
+        else:
+            raise Exception("Pick Up Points cannot be edited once created.")
+
+    def __str__(self):
+        return self.name
+
 
 class Route(models.Model):
     ''' Basic information about the route that the vehicle will take.'''
@@ -62,16 +82,20 @@ class Route(models.Model):
         unique_together = ['source', 'destination']
 
     def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
-        if not str(self.source).strip() or not str(self.destination).strip():
-            raise RouteValueException('Neither Route source nor Route destination can be empty.')
-        if str(self.source).lower().strip() == str(self.destination).lower().strip():
-            raise RouteValueException('Souce and Destination of Route cannot be same.')
-        self.source = str(self.source).lower().title()
-        self.destination = str(self.destination).lower().title()
-        super(Route, self).save(*args, **kwargs)
+        if not self.pk:
+            if not str(self.source).strip() or not str(self.destination).strip():
+                raise RouteValueException('Neither Route source nor Route destination can be empty.')
+            if str(self.source).lower().strip() == str(self.destination).lower().strip():
+                raise RouteValueException('Souce and Destination of Route cannot be same.')
+            self.source = str(self.source).lower().title()
+            self.destination = str(self.destination).lower().title()
+            super(Route, self).save(*args, **kwargs)
+        else:
+            raise Exception("Route cannot be edited once created.")
 
     def __str__(self):
         return self.source + " : " + self.destination
+
 
 class Vehicle(models.Model):
     ''' Stores information about a particular vehicle'''
@@ -92,32 +116,36 @@ class Vehicle(models.Model):
         super(Vehicle, self).save(*args, **kwargs)
 
 
-class ActiveDateTime(models.Model):
-    ''' Model to store date time '''
+class Schedule(models.Model):
+    ''' Model to save the schedule of a vehicle '''
+    route = models.ForeignKey(Route, on_delete=models.CASCADE)
     date = models.DateField()
     time = models.TimeField()
     PERIODS = (
         ('DAY', "Day"),
-        ('NIGHT', "Night")
+        ('NIGHT', "Night"),
+        ('BOHT', "Both")
     )
-    period = models.CharField(max_length=6, choices=PERIODS, default='DAY')
-
-class PickUpPoint(models.Model):
-    ''' Model to store pickup point info '''
-    name = models.CharField(max_length=255)
+    nature = models.CharField(max_length=6, choices=PERIODS, default='BOTH')
 
     def save(self, *args, **kwargs):    # pylint: disable=arguments-differ
-        if not str(self.name).strip():
-            raise EmptyValueException('Departure Point Cannot be empty.')
-        self.name = str(self.name).lower().title()
+        if not self.pk:
+            super(Schedule, self).save(*args, **kwargs)
+        else:
+            raise Exception("Schedule information cannot be edited once created.")
+
+    def __str__(self):
+        return str(self.route)+" : "+str(self.date)
 
 
 class ScheduledVehicle(models.Model):
-    ''' Store information about instance of the 'Vehicle' that is active'''
+    '''
+    Store information about instance of the 'Vehicle' that is active, Stores what
+    routes and in what time a vechile runs
+    '''
     vehicle = models.ForeignKey(Vehicle, on_delete=models.SET_NULL, null=True)
-    route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True)
-    active_stages = models.ManyToManyField(ActiveDateTime)
-    pick_up_points = models.ManyToManyField(PickUpPoint)
+    schedule = models.ManyToManyField(Schedule)
+
 
     def __str__(self):
         return f'VehicleItem: {self.vehicle}'
@@ -125,15 +153,25 @@ class ScheduledVehicle(models.Model):
 
 class Booking(models.Model):
     ''' Stores booking details'''
+    # to get vehicle details like bus number, layout
     trip = models.ForeignKey(ScheduledVehicle, on_delete=models.SET_NULL, null=True)
-    booked_by = models.CharField(max_length=255)            # will be a linked to user profile in future
-    passenger_name = models.CharField(max_length=255)
-    passenger_phone = models.PositiveIntegerField()
-    amount = models.PositiveIntegerField()
+
+    # to get the accurate schedule of the travel
+    schedule = models.ForeignKey(Schedule, on_delete=models.SET_NULL, null=True)
+
+    # will be a linked to user profile in future
+    booked_by = models.CharField(max_length=255, null=True)
+
+    passenger_name = models.CharField(max_length=255, null=True)
+    passenger_phone = models.PositiveIntegerField(null=True)
+    amount = models.PositiveIntegerField(null=True)
     seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
-    is_paid = models.BooleanField()                         # will be a selection after we decide what to implement
-    payment_method = models.CharField(max_length=255)
-    date = models.DateTimeField(default=django.utils.timezone.now)
+
+    # will be a selection after we decide what to implement
+    is_paid = models.BooleanField(default=False)
+
+    payment_method = models.CharField(max_length=255, null=True)
+    booked_on = models.DateTimeField(null=True)
     STATES = (
         ('unavailable', 'unavailable'),
         ('available', 'available'),

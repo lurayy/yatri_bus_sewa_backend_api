@@ -8,6 +8,6 @@ urlpatterns = [
     path('routes/', views.routes, name='routes'),
     path('vehicletypes/', views.vehicle_types, name='vehicle_types'),
     path('vehicles/', views.vehicles, name='vehicles'),
-    path('vehicleitems/', views.vehicle_items, name='vehicle_items'),
-    path('vehicleitems/<int:v_id>/', views.vehicle_items, name='vehicle_items')
+    path('scheduledvehicles/', views.scheduled_vehicles, name='vehicle_items'),
+    path('scheduledvehicles/<int:v_id>/', views.scheduled_vehicles, name='vehicle_items')
 ]

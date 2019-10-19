@@ -2,7 +2,7 @@
 from django.forms.models import model_to_dict as django_model_to_dict
 import dateutil.parser
 # import dateutil.parser
-from .models import Layout, Seat
+from .models import Layout, Seat, Booking
 from .exceptions import LayoutJsonFormatException
 
 
@@ -65,4 +65,11 @@ def json_to_layout(data):
 def datetime_str_to_object(date_str):
     ''' Parses datetime string to datetime object '''
     return dateutil.parser.parse(date_str)
+
+def create_booking_instances(scheduled_vehicle):
+    ''' Function to initilze all the booking (seats) for the schedule vehicles'''
+    layout = scheduled_vehicle.vehicle.vehicle_type.layout
+    seats = Seat.objects.filter(layout=layout)
+    for seat in seats:
+        Booking.objects.create(seat=seat, trip=scheduled_vehicle)
     

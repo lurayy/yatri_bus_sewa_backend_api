@@ -4,7 +4,7 @@ from datetime import date, time
 
 from django.test import TestCase, Client, RequestFactory
 
-from .models import Layout, Route, Seat, Vehicle, VehicleItem, VehicleType
+from .models import Layout, Route, Seat, Vehicle, VehicleType, Schedule, ScheduledVehicle
 from .utils import layout_to_json, json_to_layout
 
 from .views import vehicle_items
