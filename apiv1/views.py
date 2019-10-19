@@ -142,30 +142,18 @@ def scheduled_vehicles(request, v_id=None):
         [
             {
                 "route":1,
-                pickUpPoints: [
-                    'new road',
-                    'chiplaedunga'
-                ],
                 "date": "2019-11-16T08:15:00.000",
                 "time": "2019-11-16T18:15:00.000",
                 "nature":"Day",
             },
             {
                 "route":3,
-                pickUpPoints: [
-                    'new road',
-                    'chiplaedunga'
-                ],
                 "date": "2019-11-16T08:15:00.000",
                 "time": "2019-11-16T18:15:00.000",
                 "nature":"Day",
             },
             {
                 "route":1,
-                pickUpPoints: [
-                    'new road',
-                    'chiplaedunga'
-                ],
                 "date": "2019-11-16T08:15:00.000",
                 "time": "2019-11-16T18:15:00.000",
                 "nature":"Night",
