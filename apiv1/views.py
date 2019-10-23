@@ -132,7 +132,7 @@ def vehicles(request):
 
 
 @require_http_methods(['GET', 'POST'])
-def scheduled_vehicles(request, v_id=None, s_id=None):
+def scheduled_vehicles(request, v_id=None):
     '''
     View for handling tasks related to vehicle_item model
     request format:
@@ -192,13 +192,7 @@ def scheduled_vehicles(request, v_id=None, s_id=None):
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
     response = []
     if v_id:
-        try:
-            s_vehicle = ScheduledVehicle.objects.get(id=int(v_id))
+        scheduled_vehicle_objects = ScheduledVehicle.objects.all()
+        for s_vehicle in scheduled_vehicle_objects:
             response.append(ScheduledVehicleSerializer(s_vehicle).data)
-            return JsonResponse({'scheduledVehicle': response[0]})
-        except (KeyError, json.decoder.JSONDecodeError, ScheduledVehicle.DoesNotExist, Schedule.DoesNotExist) as exp:
-            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-    scheduled_vehicle_objects = ScheduledVehicle.objects.all()
-    for s_vehicle in scheduled_vehicle_objects:
-        response.append(ScheduledVehicleSerializer(s_vehicle).data)
     return JsonResponse({'scheduledVehicles': response})
