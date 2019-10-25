@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
 from .models import Layout, Route, Seat, VehicleType, Vehicle, ScheduledVehicle, Schedule, Booking
-from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer, ScheduledVehicleSerializer
+from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer, ScheduledVehicleSerializer, ScheduleSerializer
 from .utils import layout_to_json, json_to_layout, datetime_str_to_object, create_booking_instances
 from .exceptions import LayoutJsonFormatException, RouteValueException, EmptyValueException
 from django.db import IntegrityError
@@ -196,3 +196,30 @@ def scheduled_vehicles(request, v_id=None):
         for s_vehicle in scheduled_vehicle_objects:
             response.append(ScheduledVehicleSerializer(s_vehicle).data)
     return JsonResponse({'scheduledVehicles': response})
+
+def search(request):
+    '''
+    View for handling search, takes in request and gives out list of SchudeledVehicles
+    {
+        "route":1,
+        "date":"2019-11-16T08:15:00.000"
+    }
+    '''
+    if request.method == "POST":
+        response = []
+        try:
+            request_json = json.loads(request.body.decode('utf-8'))
+            route = Route.objects.get(id=int(request_json['route']))
+            schedules = Schedule.objects.filter(date=datetime_str_to_object(request_json['date']).date(), route=route)
+            for schedule in schedules:
+                schedule_data = ScheduleSerializer(schedule).data
+                s_vehicles = schedule.scheduledvehicle_set.all()
+                for s_vehicle in s_vehicles:
+                    data = ScheduledVehicleSerializer(s_vehicle).data
+                    data['vehicle']['vehicleType']['layout'] = None
+                    data['schedule'] = schedule_data
+                    response.append(data)
+            return JsonResponse({'scheduledVehicles':response})
+        except (KeyError, json.decoder.JSONDecodeError, Route.DoesNotExist, Schedule.DoesNotExist) as exp:
+            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    return JsonResponse({'sd':'sd'})
