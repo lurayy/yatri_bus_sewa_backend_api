@@ -90,7 +90,7 @@ def get_seat_booking(trip, schedule):
             state = Booking.objects.get(seat=seat, trip=trip, schedule=schedule).state
         except Booking.DoesNotExist:
             state = 'available'
-        states.append(str(seat.label))
+        states.append(str(state))
     for temp_x in range(max(position_x)+1):
         response_json.append([])
         for _ in range(max(position_y)+1):
