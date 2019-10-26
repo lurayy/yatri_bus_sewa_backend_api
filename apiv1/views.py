@@ -105,6 +105,11 @@ def vehicle_types(request):
         response.append(VehicleTypeSerializer(vehicle_type).data)
     return JsonResponse({'vehicleTypes': response})
 
+def schedule(request):
+    response = []
+    for schedule_object in Schedule.objects.all():
+        response.append(ScheduleSerializer(schedule_object).data)
+    return JsonResponse({'schedule':response})
 
 @require_http_methods(['GET', 'POST'])
 def vehicles(request):
@@ -129,10 +134,6 @@ def vehicles(request):
     for vehicle in vehicle_objects:
         response.append(VehicleSerializer(vehicle).data)
     return JsonResponse({'vehicles': response})
-
-def schedule(request):
-    response = []
-
 
 @require_http_methods(['GET', 'POST'])
 def scheduled_vehicles(request, v_id=None, s_id=None):
