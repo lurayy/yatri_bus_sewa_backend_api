@@ -130,6 +130,9 @@ def vehicles(request):
         response.append(VehicleSerializer(vehicle).data)
     return JsonResponse({'vehicles': response})
 
+def schedule(request):
+    response = []
+
 
 @require_http_methods(['GET', 'POST'])
 def scheduled_vehicles(request, v_id=None, s_id=None):
@@ -190,22 +193,27 @@ def scheduled_vehicles(request, v_id=None, s_id=None):
 
         except (KeyError, json.decoder.JSONDecodeError, Route.DoesNotExist, Vehicle.DoesNotExist) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-    response = {'vehicle':'', 'booked_seats':''}
+    response = []
     if v_id:
         try:
+            response = {'scheduledVehicle':'', 'booked_seats':''}
             scheduled_vehicle_object = ScheduledVehicle.objects.get(id=v_id)
-            response['vehicle'] = (ScheduledVehicleSerializer(scheduled_vehicle_object).data)
+            response['scheduledVehicle'] = (ScheduledVehicleSerializer(scheduled_vehicle_object).data)
             if s_id:
-                schedule = Schedule.objects.get(id=s_id)
-                booked_seats = get_seat_booking(scheduled_vehicle_object, schedule)
-                response['vehicle']['schedule'] = ScheduleSerializer(schedule).data
+                schedule_object = Schedule.objects.get(id=s_id)
+                booked_seats = get_seat_booking(scheduled_vehicle_object, schedule_object)
+                response['scheduledVehicle']['schedule'] = ScheduleSerializer(schedule_object).data
                 response['booked_seats'] = booked_seats
+            return JsonResponse(response)
         except (KeyError, json.decoder.JSONDecodeError, ScheduledVehicle.DoesNotExist, Schedule.DoesNotExist) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-
     else:
-        scheduled_vehicle_object = ScheduledVehicle.objects.get(id=v_id)
-    return JsonResponse({'scheduledVehicles': response})
+        sv_objects = ScheduledVehicle.objects.all()
+        for sv_object in sv_objects:
+            data = ScheduledVehicleSerializer(sv_object).data
+            data['vehicle']['vehicleType']['layout'] = None
+            response.append(data)
+        return JsonResponse({'scheduledVehicles': response})
 
 
 def search(request):
@@ -222,9 +230,9 @@ def search(request):
             request_json = json.loads(request.body.decode('utf-8'))
             route = Route.objects.get(id=int(request_json['route']))
             schedules = Schedule.objects.filter(date=datetime_str_to_object(request_json['date']).date(), route=route)
-            for schedule in schedules:
-                schedule_data = ScheduleSerializer(schedule).data
-                s_vehicles = schedule.scheduledvehicle_set.all()
+            for schedule_object in schedules:
+                schedule_data = ScheduleSerializer(schedule_object).data
+                s_vehicles = schedule_object.scheduledvehicle_set.all()
                 for s_vehicle in s_vehicles:
                     data = ScheduledVehicleSerializer(s_vehicle).data
                     data['vehicle']['vehicleType']['layout'] = None
