@@ -6,7 +6,7 @@ from django.views.decorators.http import require_http_methods
 
 from .models import Layout, Route, Seat, VehicleType, Vehicle, ScheduledVehicle, Schedule, Booking
 from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer, ScheduledVehicleSerializer, ScheduleSerializer
-from .utils import layout_to_json, json_to_layout, datetime_str_to_object, create_booking_instances
+from .utils import layout_to_json, json_to_layout, datetime_str_to_object, create_booking_instances, get_seat_booking
 from .exceptions import LayoutJsonFormatException, RouteValueException, EmptyValueException
 from django.db import IntegrityError
 
@@ -132,7 +132,7 @@ def vehicles(request):
 
 
 @require_http_methods(['GET', 'POST'])
-def scheduled_vehicles(request, v_id=None):
+def scheduled_vehicles(request, v_id=None, s_id=None):
     '''
     View for handling tasks related to vehicle_item model
     request format:
@@ -190,12 +190,23 @@ def scheduled_vehicles(request, v_id=None):
 
         except (KeyError, json.decoder.JSONDecodeError, Route.DoesNotExist, Vehicle.DoesNotExist) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
-    response = []
+    response = {'vehicle':'', 'booked_seats':''}
     if v_id:
-        scheduled_vehicle_objects = ScheduledVehicle.objects.all()
-        for s_vehicle in scheduled_vehicle_objects:
-            response.append(ScheduledVehicleSerializer(s_vehicle).data)
+        try:
+            scheduled_vehicle_object = ScheduledVehicle.objects.get(id=v_id)
+            response['vehicle'] = (ScheduledVehicleSerializer(scheduled_vehicle_object).data)
+            if s_id:
+                schedule = Schedule.objects.get(id=s_id)
+                booked_seats = get_seat_booking(scheduled_vehicle_object, schedule)
+                response['vehicle']['schedule'] = ScheduleSerializer(schedule).data
+                response['booked_seats'] = booked_seats
+        except (KeyError, json.decoder.JSONDecodeError, ScheduledVehicle.DoesNotExist, Schedule.DoesNotExist) as exp:
+            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+
+    else:
+        scheduled_vehicle_object = ScheduledVehicle.objects.get(id=v_id)
     return JsonResponse({'scheduledVehicles': response})
+
 
 def search(request):
     '''

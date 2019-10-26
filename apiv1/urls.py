@@ -10,5 +10,6 @@ urlpatterns = [
     path('vehicles/', views.vehicles, name='vehicles'),
     path('scheduledvehicles/', views.scheduled_vehicles, name='vehicle_items'),
     path('scheduledvehicles/<int:v_id>/', views.scheduled_vehicles, name='vehicle_items'),
+    path('scheduledvehicles/<int:v_id>/<int:s_id>/', views.scheduled_vehicles, name='vehicle_items'),
     path('search/', views.search, name="Search")
 ]
