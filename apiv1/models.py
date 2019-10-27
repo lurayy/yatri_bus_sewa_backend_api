@@ -2,7 +2,7 @@
 import django
 from django.db import models
 from .exceptions import RouteValueException, EmptyValueException
-
+from users.models import CustomUserBase
 class Layout(models.Model):
     ''' Information about Seat layout '''
     REQUIRED_FIELDS = ('name',)
@@ -155,28 +155,24 @@ class Booking(models.Model):
     ''' Stores booking details'''
     # to get vehicle details like bus number, layout
     trip = models.ForeignKey(ScheduledVehicle, on_delete=models.SET_NULL, null=True)
-
     # to get the accurate schedule of the travel
     schedule = models.ForeignKey(Schedule, on_delete=models.SET_NULL, null=True)
-
+    seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
     # will be a linked to user profile in future
-    booked_by = models.CharField(max_length=255)
-
+    booked_by = models.ForeignKey(CustomUserBase, on_delete=models.SET_NULL, null=True)
     passenger_name = models.CharField(max_length=255)
     passenger_phone = models.PositiveIntegerField()
     amount = models.PositiveIntegerField()
-    seat = models.ForeignKey(Seat, on_delete=models.CASCADE)
-
     # will be a selection after we decide what to implement
     is_paid = models.BooleanField(default=False)
-
     payment_method = models.CharField(max_length=255)
     booked_on = models.DateTimeField()
     STATES = (
         ('unavailable', 'unavailable'),
-        ('available', 'available'),
         ('locked', 'locked'),
         ('booked', 'booked'),
     )
-    state = models.CharField(max_length=15, choices=STATES, default='available')
-    
+    state = models.CharField(max_length=15, choices=STATES, default='locked ')
+
+    class Meta:
+        unique_together = ['trip', 'schedule', 'seat']

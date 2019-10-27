@@ -1,6 +1,7 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-# Create your models here.
+
 
 class CustomUserBase(AbstractUser):
     '''
@@ -8,18 +9,18 @@ class CustomUserBase(AbstractUser):
     CustomUserBase which can be used to create different user classes
     '''
     USER_TYPES = (
-        ('Operator', "Operator"),
-        ('Customer', "Customer"),
-        ('Agent', "Agent")
+        ('OPERATOR', "Operator"),
+        ('CUSTOMER', "Customer"),
+        ('AGENT', "Agent")
     )
     user_type = models.CharField(max_length=9, choices=USER_TYPES, default="Customer")
+    unique_id = models.UUIDField(default=uuid.uuid4, unique=True)
 
 class Operator(models.Model):
     ''' Model class for the Operator user base '''
     REQUIRED_FIELDS = ('user',)
     user = models.OneToOneField(CustomUserBase, on_delete=models.CASCADE,
                                 primary_key=True, related_name='operator', unique=True)
-
 
 class Customer(models.Model):
     ''' Model class for the Customer user base '''
@@ -42,4 +43,4 @@ class Agent(models.Model):
     user = models.OneToOneField(CustomUserBase, on_delete=models.CASCADE,
                                 primary_key=True, related_name='agent', unique=True)
     company_name = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True)
-    credit = models.IntegerField(default=5000)
+    credit = models.IntegerField(default=0)

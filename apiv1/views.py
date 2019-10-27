@@ -9,7 +9,7 @@ from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializ
 from .utils import layout_to_json, json_to_layout, datetime_str_to_object, create_booking_instances, get_seat_booking
 from .exceptions import LayoutJsonFormatException, RouteValueException, EmptyValueException
 from django.db import IntegrityError
-
+from users.models import CustomUserBase
 
 @require_http_methods(['GET', 'POST'])
 def layouts(request):
@@ -243,3 +243,59 @@ def search(request):
         except (KeyError, json.decoder.JSONDecodeError, Route.DoesNotExist, Schedule.DoesNotExist) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
     return JsonResponse({'sd':'sd'})
+
+
+def book(request, booked_uuid):
+    '''
+    Views for handling booking action
+    {
+        "trip":1,
+        "schedule":3,
+        "seat": "A7",
+        "bookedBy": "6e6a4570-71e1-40bb-a6f7-e5261aae2634",
+        "passengerName":"Some name",
+        "passengerPhone":984654131,
+        "amount":5000,
+        "isPaid":True,
+        "paymentMethod": "Khalti",
+        "bookedOn":"2019-11-16T18:15:00.000"
+    }
+    '''
+    if request.method == "POST":
+        try:
+            request_json = json.loads(request.body.decode('utf-8'))
+            trip = ScheduledVehicle.objects.get(id=int(request_json['trip']))
+            seat = Seat.objects.get(layout=trip.vehicle.vehicle_type.layout, label=str(request_json['seat']))
+            schedule_object = Schedule.objects.get(id=int(request_json['schedule']))
+            user = CustomUserBase.objects.get(unique_id=str(request_json['bookedBy']))
+            if int(user.id) != int(request.user.id):
+                return JsonResponse({'status':False, 'error':"Intrusion Detected!"})
+            if str(user.user_type)=="Agent":
+                pass # do something with the credits later
+            try:
+                booked = Booking.objects.get(trip=trip, seat=seat, schedule=schedule_object)
+                if booked:
+                    return JsonResponse({'status':False, 'error':"This Seat is already booked by someone else."})
+            except Booking.DoesNotExist:
+                booked = Booking.objects.create(trip=trip,
+                                                schedule=schedule_object,
+                                                seat=seat,
+                                                booked_by=user,
+                                                passenger_name=str(request_json['passengerName']),
+                                                passenger_phone=int(request_json['passengerPhone']),
+                                                amount=int(request_json['amount']),
+                                                is_paid=request_json['isPaid'],
+                                                payment_method=str(request_json['paymentMethod']),
+                                                booked_on=datetime_str_to_object(request_json['bookedOn'])
+                                                )
+                booked.save()
+                return JsonResponse({'bookedingId':int(booked.id)})
+        except (KeyError, json.decoder.JSONDecodeError, ScheduledVehicle.DoesNotExist, Seat.DoesNotExist) as exp:
+            return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+
+    return JsonResponse({'error':'Still in progress aaba ekxin paxi garxu'})
+    # response = []
+    # if booked_uuid:
+    #     pass
+    
+    # user
