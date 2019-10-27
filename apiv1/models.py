@@ -3,6 +3,8 @@ import django
 from django.db import models
 from .exceptions import RouteValueException, EmptyValueException
 from users.models import CustomUserBase
+
+
 class Layout(models.Model):
     ''' Information about Seat layout '''
     REQUIRED_FIELDS = ('name',)

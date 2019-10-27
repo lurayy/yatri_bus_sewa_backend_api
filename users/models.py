@@ -16,6 +16,9 @@ class CustomUserBase(AbstractUser):
     user_type = models.CharField(max_length=9, choices=USER_TYPES, default="Customer")
     unique_id = models.UUIDField(default=uuid.uuid4, unique=True)
 
+    def __str__(self):
+        return self.first_name+" "+self.last_name+"("+self.username+")"
+
 class Operator(models.Model):
     ''' Model class for the Operator user base '''
     REQUIRED_FIELDS = ('user',)

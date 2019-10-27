@@ -102,3 +102,36 @@ def get_seat_booking(trip, schedule):
     for index, state in enumerate(states):
         response_json[position_x[index]][position_y[index]]['state'] = state
     return response_json
+
+def datetime_obj_to_str(datetime_obj):
+    '''Converts datetime object to approprite string format'''
+    my_date = datetime_obj.strftime('%Y-%m-%dT%H:%M:%S.')
+    return str(my_date)
+
+def booking_to_json(booking):
+    ''' Function to Extract necessary information from the booking object'''
+    trip = {
+        'vehicleType':booking.trip.vehicle.vehicle_type.name,
+        'vehicleNumberPlate': booking.trip.vehicle.number_plate
+    }
+    schedule = {
+        'source':booking.schedule.route.source,
+        'destination':booking.schedule.route.destination,
+        'date':datetime_obj_to_str(booking.schedule.date),
+        'time':datetime_obj_to_str(booking.schedule.time),
+        'nature':booking.schedule.nature
+    }
+    data_json = {
+        'id':booking.id,
+        'bookedBy':str(booking.booked_by),
+        'passengerName':str(booking.passenger_name),
+        'pasengerPhone':str(booking.passenger_phone),
+        'amount':booking.amount,
+        'isPaid':booking.is_paid,
+        'paymentMethod':booking.payment_method,
+        'booked_on':datetime_obj_to_str(booking.booked_on),
+        'seat_number':booking.seat.label,
+        'trip':trip,
+        'schedule':schedule
+    }
+    return data_json

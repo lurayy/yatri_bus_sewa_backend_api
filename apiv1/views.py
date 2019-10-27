@@ -1,15 +1,16 @@
 ''' Views module of api '''
 import json
-
+import datetime
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 
 from .models import Layout, Route, Seat, VehicleType, Vehicle, ScheduledVehicle, Schedule, Booking
 from .serializers import RouteSerializer, VehicleTypeSerializer, VehicleSerializer, ScheduledVehicleSerializer, ScheduleSerializer
-from .utils import layout_to_json, json_to_layout, datetime_str_to_object, create_booking_instances, get_seat_booking
+from .utils import layout_to_json, json_to_layout, datetime_str_to_object, create_booking_instances, get_seat_booking, booking_to_json
 from .exceptions import LayoutJsonFormatException, RouteValueException, EmptyValueException
 from django.db import IntegrityError
 from users.models import CustomUserBase
+from django.db.models import Q
 
 @require_http_methods(['GET', 'POST'])
 def layouts(request):
@@ -245,7 +246,8 @@ def search(request):
     return JsonResponse({'sd':'sd'})
 
 
-def book(request, booked_uuid):
+# we can use uuid here for booking to make to more safe or we can leave it just as it is.
+def book(request):
     '''
     Views for handling booking action
     {
@@ -270,7 +272,7 @@ def book(request, booked_uuid):
             user = CustomUserBase.objects.get(unique_id=str(request_json['bookedBy']))
             if int(user.id) != int(request.user.id):
                 return JsonResponse({'status':False, 'error':"Intrusion Detected!"})
-            if str(user.user_type)=="Agent":
+            if str(user.user_type) == "Agent":
                 pass # do something with the credits later
             try:
                 booked = Booking.objects.get(trip=trip, seat=seat, schedule=schedule_object)
@@ -293,9 +295,14 @@ def book(request, booked_uuid):
         except (KeyError, json.decoder.JSONDecodeError, ScheduledVehicle.DoesNotExist, Seat.DoesNotExist) as exp:
             return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
 
-    return JsonResponse({'error':'Still in progress aaba ekxin paxi garxu'})
-    # response = []
-    # if booked_uuid:
-    #     pass
-    
-    # user
+    response = []
+    try:
+        user = CustomUserBase.objects.get(id=request.user.id)
+        last_day_date = datetime.datetime.now() - datetime.timedelta(days=1)
+        print(last_day_date)
+        bookings = Booking.objects.filter(booked_by=user).filter(Q(schedule__date__gte=last_day_date))
+        for booking in bookings:
+            response.append(booking_to_json(booking))
+    except (KeyError, CustomUserBase.DoesNotExist) as exp:
+        return JsonResponse({'error': f'{exp.__class__.__name__}: {exp}'})
+    return JsonResponse({'bookedSeats':response})
