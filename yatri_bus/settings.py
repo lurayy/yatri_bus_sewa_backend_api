@@ -27,9 +27,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'udae!#@lk3tr)jr@bvva0@+t_8h#60h0il*-g-#^o!5_=acek1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://yatriapi.herokuapp.com/', 'localhost']
 CORS_ORIGIN_ALLOW_ALL = True
 
 
