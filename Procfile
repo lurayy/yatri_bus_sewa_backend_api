@@ -1,0 +1,1 @@
+web: gunicorn yatri_bus.wsgi --log-file - 
