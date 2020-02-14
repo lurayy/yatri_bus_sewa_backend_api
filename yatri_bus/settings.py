@@ -29,7 +29,7 @@ SECRET_KEY = 'udae!#@lk3tr)jr@bvva0@+t_8h#60h0il*-g-#^o!5_=acek1'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://yatriapi.herokuapp.com/', 'localhost']
+ALLOWED_HOSTS = ['herokuapp.com', 'localhost']
 CORS_ORIGIN_ALLOW_ALL = True
 
 
